@@ -1,0 +1,36 @@
+package gocvss31
+
+import (
+	"errors"
+	"fmt"
+)
+
+var (
+	ErrTooShortVector     = errors.New("too short vector")
+	ErrInvalidMetricValue = errors.New("invalid metric value")
+	ErrInvalidCVSSVersion = errors.New("invalid CVSS version")
+)
+
+// ErrBaseScore is an error returned by ParseVector when the
+// given vector have missing base score attributes.
+type ErrBaseScore struct {
+	Missings []string
+}
+
+func (err ErrBaseScore) Error() string {
+	return fmt.Sprintf("base score is missing metrics %v", err.Missings)
+}
+
+var _ error = (*ErrBaseScore)(nil)
+
+// ErrDefinedN is an error return by ParseVector when the
+// given vector has metrics abbreviations defined multiple times.
+type ErrDefinedN struct {
+	Abv []string
+}
+
+func (err ErrDefinedN) Error() string {
+	return fmt.Sprintf("given CVSS v3.1 vector has %v metric abbreviations defined multiple times", err.Abv)
+}
+
+var _ error = (*ErrDefinedN)(nil)

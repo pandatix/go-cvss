@@ -405,7 +405,7 @@ func (cvss31 CVSS31) BaseScore() float64 {
 	if cvss31.Scope == "U" {
 		impact = 6.42 * iss
 	} else {
-		impact = 7.52*(iss-0.29) - 3.25*math.Pow(iss-0.02, 15)
+		impact = 7.52*(iss-0.029) - 3.25*math.Pow(iss-0.02, 15)
 	}
 	exploitability := 8.22 * attackVector(cvss31.AttackVector) * attackComplexity(cvss31.AttackComplexity) * privilegesRequired(cvss31.PrivilegesRequired, cvss31.Scope) * userInteraction(cvss31.UserInteraction)
 	if impact <= 0 {
@@ -451,7 +451,8 @@ func (cvss31 CVSS31) EnvironmentalScore() float64 {
 	if ms == "U" {
 		return roundup(roundup(math.Min(modifiedImpact+modifiedExploitability, 10)) * exploitCodeMaturity(cvss31.ExploitCodeMaturity) * remediationLevel(cvss31.RemediationLevel) * reportConfidence(cvss31.ReportConfidence))
 	}
-	return roundup(roundup(math.Min(1.08*(modifiedImpact+modifiedExploitability), 10)) * exploitCodeMaturity(cvss31.ExploitCodeMaturity) * remediationLevel(cvss31.RemediationLevel) * reportConfidence(cvss31.ReportConfidence))
+	r := math.Min(1.08*(modifiedImpact+modifiedExploitability), 10)
+	return roundup(roundup(r) * exploitCodeMaturity(cvss31.ExploitCodeMaturity) * remediationLevel(cvss31.RemediationLevel) * reportConfidence(cvss31.ReportConfidence))
 }
 
 // Rating returns the verbose for a given rating.

@@ -109,7 +109,7 @@ func ParseVector(vector string) (*CVSS31, error) {
 
 // Vector returns the CVSS v3.1 vector string representation.
 func (cvss31 CVSS31) Vector() string {
-	s := label
+	s := label + "3.1:"
 	// Base
 	s += "/AV:" + cvss31.AttackVector
 	s += "/AC:" + cvss31.AttackComplexity

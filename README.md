@@ -1,5 +1,10 @@
 # Go-CVSS
 
+[![reference](https://godoc.org/github.com/pandatix/go-cvss/v5?status.svg=)](https://pkg.go.dev/github.com/pandatix/go-cvss)
+[![go report](https://goreportcard.com/badge/github.com/pandatix/go-cvss)](https://goreportcard.com/report/github.com/pandatix/go-cvss)
+[![codecov](https://codecov.io/gh/pandatix/go-cvss/branch/master/graph/badge.svg)](https://codecov.io/gh/pandatix/go-cvss)
+[![CI](https://github.com/pandatix/go-cvss/actions/workflows/ci.yaml/badge.svg)](https://github.com/pandatix/go-cvss/actions?query=workflow%3Aci+)
+
 Go module to manipulate Common Vulnerability Scoring System (CVSS).
 
 Specified by [first.org](https://www.first.org/cvss/), the CVSS provides a way to capture the principal characteristics of a vulnerability and produce a numerical score reflecting its severity.

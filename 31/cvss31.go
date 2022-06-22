@@ -262,7 +262,7 @@ func (cvss31 CVSS31) Get(abv string) (any, error) {
 	case "MA":
 		return cvss31.ModifiedAvailability, nil
 	default:
-		return nil, errors.New("invalid metric abreviation : " + abv)
+		return nil, errors.New("invalid metric abbreviation : " + abv)
 	}
 }
 
@@ -383,7 +383,7 @@ func (cvss31 *CVSS31) Set(abv string, value string) error {
 		}
 		cvss31.ModifiedAvailability = value
 	default:
-		return errors.New("invalid metric abreviation : " + abv)
+		return errors.New("invalid metric abbreviation : " + abv)
 	}
 	return nil
 }

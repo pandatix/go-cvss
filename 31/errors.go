@@ -9,6 +9,7 @@ var (
 	ErrTooShortVector     = errors.New("too short vector")
 	ErrInvalidMetricValue = errors.New("invalid metric value")
 	ErrInvalidCVSSVersion = errors.New("invalid CVSS version")
+	ErrOutOfBoundsScore   = errors.New("out of bounds score")
 )
 
 // ErrBaseScore is an error returned by ParseVector when the
@@ -34,3 +35,15 @@ func (err ErrDefinedN) Error() string {
 }
 
 var _ error = (*ErrDefinedN)(nil)
+
+// ErrInvalidMetric is an error returned when a given
+// metric does not exist.
+type ErrInvalidMetric struct {
+	Abv string
+}
+
+func (err ErrInvalidMetric) Error() string {
+	return fmt.Sprintf("invalid metric abbreviation : %s", err.Abv)
+}
+
+var _ error = (*ErrInvalidMetric)(nil)

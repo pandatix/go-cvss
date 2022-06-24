@@ -1,7 +1,6 @@
 package gocvss31
 
 import (
-	"errors"
 	"math"
 	"strings"
 )
@@ -262,7 +261,7 @@ func (cvss31 CVSS31) Get(abv string) (any, error) {
 	case "MA":
 		return cvss31.ModifiedAvailability, nil
 	default:
-		return nil, errors.New("invalid metric abbreviation : " + abv)
+		return nil, &ErrInvalidMetric{Abv: abv}
 	}
 }
 
@@ -383,7 +382,7 @@ func (cvss31 *CVSS31) Set(abv string, value string) error {
 		}
 		cvss31.ModifiedAvailability = value
 	default:
-		return errors.New("invalid metric abbreviation : " + abv)
+		return &ErrInvalidMetric{Abv: abv}
 	}
 	return nil
 }
@@ -461,7 +460,7 @@ func (cvss31 CVSS31) EnvironmentalScore() float64 {
 // behaviour is not enforced by the specification.
 func Rating(score float64) (string, error) {
 	if score < 0.0 || score > 10.0 {
-		return "", errors.New("out of bounds score")
+		return "", ErrOutOfBoundsScore
 	}
 	if score >= 9.0 {
 		return "CRITICAL", nil

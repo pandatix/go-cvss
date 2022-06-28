@@ -44,6 +44,6 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("%.1f %s\n", baseScore, rat)
-    // Prints "5.4 MEDIUM"
+	// Prints "5.4 MEDIUM"
 }
 ```

@@ -214,7 +214,7 @@ type Environmental struct {
 }
 
 // Get returns the value of the given metric abbreviation.
-func (cvss31 CVSS31) Get(abv string) (any, error) {
+func (cvss31 CVSS31) Get(abv string) (string, error) {
 	switch abv {
 	case "AV":
 		return cvss31.AttackVector, nil
@@ -261,7 +261,7 @@ func (cvss31 CVSS31) Get(abv string) (any, error) {
 	case "MA":
 		return cvss31.ModifiedAvailability, nil
 	default:
-		return nil, &ErrInvalidMetric{Abv: abv}
+		return "", &ErrInvalidMetric{Abv: abv}
 	}
 }
 

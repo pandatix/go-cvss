@@ -11,7 +11,7 @@ Specified by [first.org](https://www.first.org/cvss/), the CVSS provides a way t
 
 It currently supports :
  - [ ] [CVSS 1.0](https://www.first.org/cvss/v1/guide)
- - [ ] [CVSS 2.0](https://www.first.org/cvss/v2/guide)
+ - [X] [CVSS 2.0](https://www.first.org/cvss/v2/guide)
  - [ ] [CVSS 3.0](https://www.first.org/cvss/v3.0/specification-document)
  - [X] [CVSS 3.1](https://www.first.org/cvss/v3.1/specification-document)
  - [ ] CVSS 4.0 (currently not published)
@@ -47,3 +47,10 @@ func main() {
 	// Prints "5.4 MEDIUM"
 }
 ```
+
+## Feedbacks
+
+### CVSS v2.0
+
+ - Section 3.3.1's base vector gives a base score of 7.8, while verbosely documented as 6.4.
+ - `round_to_1_decimal` may have been specified, so that it's not guessed and adjusted to fit precomputed scores. It's not even CVSS v3.1 `roundup` specification.

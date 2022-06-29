@@ -113,6 +113,13 @@ var testsParseVector = map[string]struct {
 			},
 		},
 	},
+	"Fuzz 548eabe03ebb3d1fdc8956e28ea60a898abedb09994812af4c3ccf8cfcc2e490": {
+		// This fuzz crasher shows that the parser did not validate
+		// the CVSS header.
+		Vector:         "000003.1/AV:A/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N",
+		ExpectedCVSS31: nil,
+		ExpectedErr:    gocvss31.ErrInvalidCVSSHeader,
+	},
 }
 
 func TestParseVector(t *testing.T) {

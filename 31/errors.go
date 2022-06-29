@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	ErrInvalidCVSSHeader  = errors.New("invalid CVSS v3.1 header")
 	ErrTooShortVector     = errors.New("too short vector")
 	ErrInvalidMetricValue = errors.New("invalid metric value")
 	ErrInvalidCVSSVersion = errors.New("invalid CVSS version")

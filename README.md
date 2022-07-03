@@ -10,11 +10,12 @@ Go module to manipulate Common Vulnerability Scoring System (CVSS).
 Specified by [first.org](https://www.first.org/cvss/), the CVSS provides a way to capture the principal characteristics of a vulnerability and produce a numerical score reflecting its severity.
 
 It currently supports :
- - [ ] [CVSS 1.0](https://www.first.org/cvss/v1/guide)
  - [X] [CVSS 2.0](https://www.first.org/cvss/v2/guide)
  - [X] [CVSS 3.0](https://www.first.org/cvss/v3.0/specification-document)
  - [X] [CVSS 3.1](https://www.first.org/cvss/v3.1/specification-document)
  - [ ] CVSS 4.0 (currently not published)
+
+It won't support CVSS v1.0, as despite it was a good CVSS start, it can't get vectorized, abreviations and enumerations are not strongly specified, so the cohesion and interoperability can't be satisfied.
 
 # How to use
 

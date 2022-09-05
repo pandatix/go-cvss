@@ -304,3 +304,270 @@ func TestScores(t *testing.T) {
 		})
 	}
 }
+
+var Gcvss31 *gocvss31.CVSS31
+var Gerr error
+
+func BenchmarkParseVector_Base(b *testing.B) {
+	benchmarkParseVector("CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N", b)
+}
+
+func BenchmarkParseVector_WithTempAndEnv(b *testing.B) {
+	benchmarkParseVector("CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N/E:U/RL:O/RC:C/CR:H/IR:M/MUI:R/MC:H/MI:H/MA:H", b)
+}
+
+func benchmarkParseVector(vector string, b *testing.B) {
+	var cvss31 *gocvss31.CVSS31
+	var err error
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		cvss31, err = gocvss31.ParseVector(vector)
+	}
+	Gcvss31 = cvss31
+	Gerr = err
+}
+
+var Gstr string
+
+func BenchmarkCVSS31Vector(b *testing.B) {
+	cvss31 := &gocvss31.CVSS31{
+		Base: gocvss31.Base{
+			AttackVector:       "N",
+			AttackComplexity:   "L",
+			PrivilegesRequired: "L",
+			UserInteraction:    "R",
+			Scope:              "C",
+			Confidentiality:    "L",
+			Integrity:          "L",
+			Availability:       "N",
+		},
+		Temporal: gocvss31.Temporal{
+			ExploitCodeMaturity: "U",
+			RemediationLevel:    "X",
+			ReportConfidence:    "C",
+		},
+		Environmental: gocvss31.Environmental{
+			ConfidentialityRequirement: "H",
+			IntegrityRequirement:       "M",
+			AvailabilityRequirement:    "X",
+			ModifiedAttackVector:       "X",
+			ModifiedAttackComplexity:   "X",
+			ModifiedPrivilegesRequired: "X",
+			ModifiedUserInteraction:    "R",
+			ModifiedScope:              "X",
+			ModifiedConfidentiality:    "H",
+			ModifiedIntegrity:          "H",
+			ModifiedAvailability:       "H",
+		},
+	}
+	var str string
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		str = cvss31.Vector()
+	}
+	Gstr = str
+}
+
+var Gget string
+
+func BenchmarkCVSS31Get(b *testing.B) {
+	const abv = "UI"
+	cvss31 := &gocvss31.CVSS31{
+		Base: gocvss31.Base{
+			AttackVector:       "N",
+			AttackComplexity:   "L",
+			PrivilegesRequired: "L",
+			UserInteraction:    "R",
+			Scope:              "C",
+			Confidentiality:    "L",
+			Integrity:          "L",
+			Availability:       "N",
+		},
+		Temporal: gocvss31.Temporal{
+			ExploitCodeMaturity: "U",
+			RemediationLevel:    "O",
+			ReportConfidence:    "C",
+		},
+		Environmental: gocvss31.Environmental{
+			ConfidentialityRequirement: "H",
+			IntegrityRequirement:       "M",
+			AvailabilityRequirement:    "X",
+			ModifiedAttackVector:       "X",
+			ModifiedAttackComplexity:   "X",
+			ModifiedPrivilegesRequired: "X",
+			ModifiedUserInteraction:    "R",
+			ModifiedScope:              "X",
+			ModifiedConfidentiality:    "H",
+			ModifiedIntegrity:          "H",
+			ModifiedAvailability:       "H",
+		},
+	}
+	var get string
+	var err error
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		get, err = cvss31.Get(abv)
+	}
+	Gget = get
+	Gerr = err
+}
+
+func BenchmarkCVSS31Set(b *testing.B) {
+	const abv = "UI"
+	const value = "R"
+	cvss31 := &gocvss31.CVSS31{
+		Base: gocvss31.Base{
+			AttackVector:       "N",
+			AttackComplexity:   "L",
+			PrivilegesRequired: "L",
+			UserInteraction:    "N",
+			Scope:              "C",
+			Confidentiality:    "L",
+			Integrity:          "L",
+			Availability:       "N",
+		},
+		Temporal: gocvss31.Temporal{
+			ExploitCodeMaturity: "U",
+			RemediationLevel:    "O",
+			ReportConfidence:    "C",
+		},
+		Environmental: gocvss31.Environmental{
+			ConfidentialityRequirement: "H",
+			IntegrityRequirement:       "M",
+			AvailabilityRequirement:    "X",
+			ModifiedAttackVector:       "X",
+			ModifiedAttackComplexity:   "X",
+			ModifiedPrivilegesRequired: "X",
+			ModifiedUserInteraction:    "R",
+			ModifiedScope:              "X",
+			ModifiedConfidentiality:    "H",
+			ModifiedIntegrity:          "H",
+			ModifiedAvailability:       "H",
+		},
+	}
+	var err error
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		err = cvss31.Set(abv, value)
+	}
+	Gerr = err
+}
+
+var Gscore float64
+
+func BenchmarkCVSS31BaseScore(b *testing.B) {
+	var score float64
+	cvss31 := &gocvss31.CVSS31{
+		Base: gocvss31.Base{
+			AttackVector:       "N",
+			AttackComplexity:   "L",
+			PrivilegesRequired: "L",
+			UserInteraction:    "N",
+			Scope:              "C",
+			Confidentiality:    "L",
+			Integrity:          "L",
+			Availability:       "N",
+		},
+		Temporal: gocvss31.Temporal{
+			ExploitCodeMaturity: "U",
+			RemediationLevel:    "O",
+			ReportConfidence:    "C",
+		},
+		Environmental: gocvss31.Environmental{
+			ConfidentialityRequirement: "H",
+			IntegrityRequirement:       "M",
+			AvailabilityRequirement:    "X",
+			ModifiedAttackVector:       "X",
+			ModifiedAttackComplexity:   "X",
+			ModifiedPrivilegesRequired: "X",
+			ModifiedUserInteraction:    "R",
+			ModifiedScope:              "X",
+			ModifiedConfidentiality:    "H",
+			ModifiedIntegrity:          "H",
+			ModifiedAvailability:       "H",
+		},
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		score = cvss31.BaseScore()
+	}
+	Gscore = score
+}
+
+func BenchmarkCVSS31TemporalScore(b *testing.B) {
+	var score float64
+	cvss31 := &gocvss31.CVSS31{
+		Base: gocvss31.Base{
+			AttackVector:       "N",
+			AttackComplexity:   "L",
+			PrivilegesRequired: "L",
+			UserInteraction:    "N",
+			Scope:              "C",
+			Confidentiality:    "L",
+			Integrity:          "L",
+			Availability:       "N",
+		},
+		Temporal: gocvss31.Temporal{
+			ExploitCodeMaturity: "U",
+			RemediationLevel:    "O",
+			ReportConfidence:    "C",
+		},
+		Environmental: gocvss31.Environmental{
+			ConfidentialityRequirement: "H",
+			IntegrityRequirement:       "M",
+			AvailabilityRequirement:    "X",
+			ModifiedAttackVector:       "X",
+			ModifiedAttackComplexity:   "X",
+			ModifiedPrivilegesRequired: "X",
+			ModifiedUserInteraction:    "R",
+			ModifiedScope:              "X",
+			ModifiedConfidentiality:    "H",
+			ModifiedIntegrity:          "H",
+			ModifiedAvailability:       "H",
+		},
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		score = cvss31.TemporalScore()
+	}
+	Gscore = score
+}
+
+func BenchmarkCVSS31EnvironmentalScore(b *testing.B) {
+	var score float64
+	cvss31 := &gocvss31.CVSS31{
+		Base: gocvss31.Base{
+			AttackVector:       "N",
+			AttackComplexity:   "L",
+			PrivilegesRequired: "L",
+			UserInteraction:    "N",
+			Scope:              "C",
+			Confidentiality:    "L",
+			Integrity:          "L",
+			Availability:       "N",
+		},
+		Temporal: gocvss31.Temporal{
+			ExploitCodeMaturity: "U",
+			RemediationLevel:    "O",
+			ReportConfidence:    "C",
+		},
+		Environmental: gocvss31.Environmental{
+			ConfidentialityRequirement: "H",
+			IntegrityRequirement:       "M",
+			AvailabilityRequirement:    "X",
+			ModifiedAttackVector:       "X",
+			ModifiedAttackComplexity:   "X",
+			ModifiedPrivilegesRequired: "X",
+			ModifiedUserInteraction:    "R",
+			ModifiedScope:              "X",
+			ModifiedConfidentiality:    "H",
+			ModifiedIntegrity:          "H",
+			ModifiedAvailability:       "H",
+		},
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		score = cvss31.EnvironmentalScore()
+	}
+	Gscore = score
+}

@@ -3,52 +3,24 @@ package gocvss31
 import (
 	"math"
 	"strings"
+	"unsafe"
 )
 
 // This file is based on https://www.first.org/cvss/v3-1/cvss-v31-specification_r1.pdf.
 
 const (
-	label = "CVSS:"
+	header = "CVSS:3.1/"
 )
 
 // ParseVector parses a given vector string, validates it
 // and returns a CVSS31.
 func ParseVector(vector string) (*CVSS31, error) {
-	// Check label is present
-	if len(vector) < len(label) {
-		return nil, ErrTooShortVector
-	}
-	if vector[:len(label)] != label {
+	// Check header
+	if !strings.HasPrefix(vector, header) {
 		return nil, ErrInvalidCVSSHeader
 	}
-	vector = vector[len(label):]
+	vector = vector[len(header):]
 
-	// Split parts
-	pts := strings.Split(vector, "/")
-	if len(pts) < 8 {
-		// 1 (version) + 7 (base score metrics)
-		return nil, ErrTooShortVector
-	}
-	if pts[0] != "3.1" {
-		return nil, ErrInvalidCVSSVersion
-	}
-	pts = pts[1:]
-
-	// Check each metric is set only once
-	kvm := map[string]string{}
-	errn := &ErrDefinedN{}
-	for _, pt := range pts {
-		abv, v, _ := strings.Cut(pt, ":")
-		if _, ok := kvm[abv]; ok {
-			errn.Abv = append(errn.Abv, abv)
-		}
-		kvm[abv] = v
-	}
-	if len(errn.Abv) != 0 {
-		return nil, errn
-	}
-
-	// Work on each CVSS part
 	cvss31 := &CVSS31{
 		Base: Base{},
 		Temporal: Temporal{
@@ -70,81 +42,307 @@ func ParseVector(vector string) (*CVSS31, error) {
 			ModifiedAvailability:       "X",
 		},
 	}
-	for abv, v := range kvm {
-		if err := cvss31.Set(abv, v); err != nil {
-			return nil, err
+
+	// Split and handle on the fly
+	start := 0
+	kvm := kvm{}
+	for i := 0; i < len(vector); i++ {
+		c := vector[i]
+		if c == '/' {
+			if err := handleCouple(vector[start:i], cvss31, kvm); err != nil {
+				return nil, err
+			}
+			start = i + 1
 		}
+	}
+	if err := handleCouple(vector[start:], cvss31, kvm); err != nil {
+		return nil, err
 	}
 
 	// Check all base score metrics are defined
-	errs := &ErrBaseScore{}
 	if cvss31.Base.AttackVector == "" {
-		errs.Missings = append(errs.Missings, "AV")
+		return nil, &ErrMissing{Abv: "AV"}
 	}
 	if cvss31.Base.AttackComplexity == "" {
-		errs.Missings = append(errs.Missings, "AC")
+		return nil, &ErrMissing{Abv: "AC"}
 	}
 	if cvss31.Base.PrivilegesRequired == "" {
-		errs.Missings = append(errs.Missings, "PR")
+		return nil, &ErrMissing{Abv: "PR"}
 	}
 	if cvss31.Base.UserInteraction == "" {
-		errs.Missings = append(errs.Missings, "UI")
+		return nil, &ErrMissing{Abv: "UI"}
 	}
 	if cvss31.Base.Scope == "" {
-		errs.Missings = append(errs.Missings, "S")
+		return nil, &ErrMissing{Abv: "S"}
 	}
 	if cvss31.Base.Confidentiality == "" {
-		errs.Missings = append(errs.Missings, "C")
+		return nil, &ErrMissing{Abv: "C"}
 	}
 	if cvss31.Base.Integrity == "" {
-		errs.Missings = append(errs.Missings, "I")
+		return nil, &ErrMissing{Abv: "I"}
 	}
 	if cvss31.Base.Availability == "" {
-		errs.Missings = append(errs.Missings, "A")
-	}
-	if len(errs.Missings) != 0 {
-		return nil, errs
+		return nil, &ErrMissing{Abv: "A"}
 	}
 
 	return cvss31, nil
 }
 
-// Vector returns the CVSS v3.1 vector string representation.
-func (cvss31 CVSS31) Vector() string {
-	s := label + "3.1"
-	// Base
-	s += "/AV:" + cvss31.AttackVector
-	s += "/AC:" + cvss31.AttackComplexity
-	s += "/PR:" + cvss31.PrivilegesRequired
-	s += "/UI:" + cvss31.UserInteraction
-	s += "/S:" + cvss31.Scope
-	s += "/C:" + cvss31.Confidentiality
-	s += "/I:" + cvss31.Integrity
-	s += "/A:" + cvss31.Availability
-	// Temporal
-	s += notMandatory("E", cvss31.ExploitCodeMaturity)
-	s += notMandatory("RL", cvss31.RemediationLevel)
-	s += notMandatory("RC", cvss31.ReportConfidence)
-	// Environmental
-	s += notMandatory("CR", cvss31.ConfidentialityRequirement)
-	s += notMandatory("IR", cvss31.IntegrityRequirement)
-	s += notMandatory("AR", cvss31.AvailabilityRequirement)
-	s += notMandatory("MAV", cvss31.ModifiedAttackVector)
-	s += notMandatory("MAC", cvss31.ModifiedAttackComplexity)
-	s += notMandatory("MPR", cvss31.ModifiedPrivilegesRequired)
-	s += notMandatory("MUI", cvss31.ModifiedUserInteraction)
-	s += notMandatory("MS", cvss31.ModifiedScope)
-	s += notMandatory("MC", cvss31.ModifiedConfidentiality)
-	s += notMandatory("MI", cvss31.ModifiedIntegrity)
-	s += notMandatory("MA", cvss31.ModifiedAvailability)
-	return s
+// kvm stands for Key-Value Map, and is used to make sure each
+// metric is defined only once, as documented by the CVSS v3.1
+// specification document, section 6 "Vector String" paragraph 3.
+// Using this avoids a map that escapes to heap for each call of
+// ParseVector, as its size is known and wont evolve.
+type kvm struct {
+	// base metrics
+	av, ac, pr, ui, s, c, i, a bool
+	// temporal metrics
+	e, rl, rc bool
+	// environmental metrics
+	cr, ir, ar, mav, mac, mpr, mui, ms, mc, mi, ma bool
 }
 
-func notMandatory(abv, v string) string {
-	if v == "X" {
-		return ""
+func (kvm kvm) isSet(abv string) (bool, error) {
+	switch abv {
+	case "AV":
+		return kvm.av, nil
+	case "AC":
+		return kvm.ac, nil
+	case "PR":
+		return kvm.pr, nil
+	case "UI":
+		return kvm.ui, nil
+	case "S":
+		return kvm.s, nil
+	case "C":
+		return kvm.c, nil
+	case "I":
+		return kvm.i, nil
+	case "A":
+		return kvm.a, nil
+	case "E":
+		return kvm.e, nil
+	case "RL":
+		return kvm.rl, nil
+	case "RC":
+		return kvm.rc, nil
+	case "CR":
+		return kvm.cr, nil
+	case "IR":
+		return kvm.ir, nil
+	case "AR":
+		return kvm.ar, nil
+	case "MAV":
+		return kvm.mav, nil
+	case "MAC":
+		return kvm.mac, nil
+	case "MPR":
+		return kvm.mpr, nil
+	case "MUI":
+		return kvm.mui, nil
+	case "MS":
+		return kvm.ms, nil
+	case "MC":
+		return kvm.mc, nil
+	case "MI":
+		return kvm.mi, nil
+	case "MA":
+		return kvm.ma, nil
+	default:
+		return false, &ErrInvalidMetric{Abv: abv}
 	}
-	return "/" + abv + ":" + v
+}
+
+func (kvm *kvm) set(abv string) {
+	switch abv {
+	case "AV":
+		kvm.av = true
+	case "AC":
+		kvm.ac = true
+	case "PR":
+		kvm.pr = true
+	case "UI":
+		kvm.ui = true
+	case "S":
+		kvm.s = true
+	case "C":
+		kvm.c = true
+	case "I":
+		kvm.i = true
+	case "A":
+		kvm.a = true
+	case "E":
+		kvm.e = true
+	case "RL":
+		kvm.rl = true
+	case "RC":
+		kvm.rc = true
+	case "CR":
+		kvm.cr = true
+	case "IR":
+		kvm.ir = true
+	case "AR":
+		kvm.ar = true
+	case "MAV":
+		kvm.mav = true
+	case "MAC":
+		kvm.mac = true
+	case "MPR":
+		kvm.mpr = true
+	case "MUI":
+		kvm.mui = true
+	case "MS":
+		kvm.ms = true
+	case "MC":
+		kvm.mc = true
+	case "MI":
+		kvm.mi = true
+	case "MA":
+		kvm.ma = true
+	default:
+		panic(&ErrInvalidMetric{Abv: abv})
+	}
+}
+
+func handleCouple(couple string, cvss31 *CVSS31, kvm kvm) error {
+	abv, v, err := splitCouple(couple)
+	if err != nil {
+		return err
+	}
+	isSet, err := kvm.isSet(abv)
+	if err != nil {
+		return err
+	}
+	if isSet {
+		return &ErrDefinedN{Abv: abv}
+	}
+	if err := cvss31.Set(abv, v); err != nil {
+		return err
+	}
+	kvm.set(abv)
+	return nil
+}
+
+func splitCouple(couple string) (string, string, error) {
+	for i := 0; i < len(couple); i++ {
+		if couple[i] == ':' {
+			return couple[:i], couple[i+1:], nil
+		}
+	}
+	return "", "", &ErrCouple{Couple: couple}
+}
+
+// Vector returns the CVSS v3.1 vector string representation.
+func (cvss31 CVSS31) Vector() string {
+	l := lenVec(&cvss31)
+	b := make([]byte, 0, l)
+	b = append(b, header...)
+
+	// Base
+	mandatory(&b, "AV:", cvss31.AttackVector)
+	mandatory(&b, "/AC:", cvss31.AttackComplexity)
+	mandatory(&b, "/PR:", cvss31.PrivilegesRequired)
+	mandatory(&b, "/UI:", cvss31.UserInteraction)
+	mandatory(&b, "/S:", cvss31.Scope)
+	mandatory(&b, "/C:", cvss31.Confidentiality)
+	mandatory(&b, "/I:", cvss31.Integrity)
+	mandatory(&b, "/A:", cvss31.Availability)
+
+	// Temporal
+	notMandatory(&b, "/E:", cvss31.ExploitCodeMaturity)
+	notMandatory(&b, "/RL:", cvss31.RemediationLevel)
+	notMandatory(&b, "/RC:", cvss31.ReportConfidence)
+
+	// Environmental
+	notMandatory(&b, "/CR:", cvss31.ConfidentialityRequirement)
+	notMandatory(&b, "/IR:", cvss31.IntegrityRequirement)
+	notMandatory(&b, "/AR:", cvss31.AvailabilityRequirement)
+	notMandatory(&b, "/MAV:", cvss31.ModifiedAttackVector)
+	notMandatory(&b, "/MAC:", cvss31.ModifiedAttackComplexity)
+	notMandatory(&b, "/MPR:", cvss31.ModifiedPrivilegesRequired)
+	notMandatory(&b, "/MUI:", cvss31.ModifiedUserInteraction)
+	notMandatory(&b, "/MS:", cvss31.ModifiedScope)
+	notMandatory(&b, "/MC:", cvss31.ModifiedConfidentiality)
+	notMandatory(&b, "/MI:", cvss31.ModifiedIntegrity)
+	notMandatory(&b, "/MA:", cvss31.ModifiedAvailability)
+
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+func lenVec(cvss31 *CVSS31) int {
+	// Header: constant, so fixed (9)
+	// Base:
+	// - AV, AC, PR, UI: 4
+	// - S, C, I, A: 3
+	// - separators: 7
+	// Total: 4*4 + 4*3 + 7 = 35
+	l := len(header) + 35
+
+	// Temporal:
+	// - E: 3
+	// - RL, RC: 4
+	// - each one adds a separator
+	if cvss31.Temporal.ExploitCodeMaturity != "X" {
+		l += 4
+	}
+	if cvss31.Temporal.RemediationLevel != "X" {
+		l += 5
+	}
+	if cvss31.Temporal.ReportConfidence != "X" {
+		l += 5
+	}
+
+	// Environmental
+	// - CR, IR, AR, MS, MC, MI, MA: 4
+	// - MAV, MAC, MPR, MUI: 5
+	// - each one adds a separator
+	if cvss31.Environmental.ConfidentialityRequirement != "X" {
+		l += 5
+	}
+	if cvss31.Environmental.IntegrityRequirement != "X" {
+		l += 5
+	}
+	if cvss31.Environmental.AvailabilityRequirement != "X" {
+		l += 5
+	}
+	if cvss31.Environmental.ModifiedScope != "X" {
+		l += 5
+	}
+	if cvss31.Environmental.ModifiedConfidentiality != "X" {
+		l += 5
+	}
+	if cvss31.Environmental.ModifiedIntegrity != "X" {
+		l += 5
+	}
+	if cvss31.Environmental.ModifiedAvailability != "X" {
+		l += 5
+	}
+	if cvss31.Environmental.ModifiedAttackVector != "X" {
+		l += 6
+	}
+	if cvss31.Environmental.ModifiedAttackComplexity != "X" {
+		l += 6
+	}
+	if cvss31.Environmental.ModifiedPrivilegesRequired != "X" {
+		l += 6
+	}
+	if cvss31.Environmental.ModifiedUserInteraction != "X" {
+		l += 6
+	}
+
+	return l
+}
+
+func mandatory(b *[]byte, pre, v string) {
+	*b = append(*b, pre...)
+	*b = append(*b, v...)
+}
+
+func notMandatory(b *[]byte, pre, v string) {
+	if v == "X" {
+		return
+	}
+	mandatory(b, pre, v)
 }
 
 // CVSS31 embeds all the metric values defined by the CVSS v3.1

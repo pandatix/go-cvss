@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/pandatix/go-cvss/branch/master/graph/badge.svg)](https://codecov.io/gh/pandatix/go-cvss)
 [![CI](https://github.com/pandatix/go-cvss/actions/workflows/ci.yaml/badge.svg)](https://github.com/pandatix/go-cvss/actions?query=workflow%3Aci+)
 
-Go module to manipulate Common Vulnerability Scoring System (CVSS).
+Go-CVSS is a low-allocation Go module made to manipulate Common Vulnerability Scoring System (CVSS)
 
 Specified by [first.org](https://www.first.org/cvss/), the CVSS provides a way to capture the principal characteristics of a vulnerability and produce a numerical score reflecting its severity.
 
@@ -17,7 +17,19 @@ It currently supports :
 
 It won't support CVSS v1.0, as despite it was a good CVSS start, it can't get vectorized, abreviations and enumerations are not strongly specified, so the cohesion and interoperability can't be satisfied.
 
-# How to use
+## Summary
+
+ - [How to use](#how-to-use)
+ - [A word on performances](#a-word-on-performances)
+   - [CVSS v2.0](#cvss-v20)
+   - [CVSS v3.0](#cvss-v30)
+   - [CVSS v3.1](#cvss-v31)
+ - [Feedbacks](#feedbacks)
+   - [CVSS v2.0](#cvss-v20-1)
+   - [CVSS v3.0](#cvss-v30-1)
+   - [CVSS v3.1](#cvss-v31-1)
+
+## How to use
 
 The following code gives an example on how to use the present Go module.
 
@@ -47,6 +59,38 @@ func main() {
 	fmt.Printf("%.1f %s\n", baseScore, rat)
 	// Prints "5.4 MEDIUM"
 }
+```
+
+## A word on performances
+
+We are aware that manipulating a CVSS object does not provide the most value to your business needs.
+This is why we paid a big attention to performances of this module.
+
+What we made is making this module **0 to 1 allocs/op** for the whole API.
+This reduce drastically the pressure on the Garbage Collector using this Go module, without cutting through security (fuzzing ensures the API does not contain obvious security issues). It also reduces the time and bytes per op to a really acceptable level.
+
+The following shows the performances results.
+We challenge any other Go implementation to do better :stuck_out_tongue_winking_eye:
+
+### CVSS v2.0
+
+### CVSS v3.0
+
+### CVSS v3.1
+
+```
+goos: linux
+goarch: amd64
+pkg: github.com/pandatix/go-cvss/31
+cpu: Intel(R) Core(TM) i5-2450M CPU @ 2.50GHz
+BenchmarkParseVector_Base-4             	 1312525	       895.0 ns/op	     352 B/op	       1 allocs/op
+BenchmarkParseVector_WithTempAndEnv-4   	  685629	        2232 ns/op	     352 B/op	       1 allocs/op
+BenchmarkCVSS31Vector-4                 	 4867528	       223.2 ns/op	      96 B/op	       1 allocs/op
+BenchmarkCVSS31Get-4                    	31498058	       36.37 ns/op	       0 B/op	       0 allocs/op
+BenchmarkCVSS31Set-4                    	30187612	       38.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkCVSS31BaseScore-4              	11144173	       101.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkCVSS31TemporalScore-4          	 7856455	       154.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkCVSS31EnvironmentalScore-4     	 6310815	       169.4 ns/op	       0 B/op	       0 allocs/op
 ```
 
 ## Feedbacks

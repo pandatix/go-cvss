@@ -600,14 +600,8 @@ func validate(value string, enabled []string) error {
 
 // BaseScore returns the CVSS v3.1's base score.
 func (cvss31 CVSS31) BaseScore() float64 {
-	iss := 1 - ((1 - cia(cvss31.Confidentiality)) * (1 - cia(cvss31.Integrity)) * (1 - cia(cvss31.Availability)))
-	var impact float64
-	if cvss31.Scope == "U" {
-		impact = 6.42 * iss
-	} else {
-		impact = 7.52*(iss-0.029) - 3.25*math.Pow(iss-0.02, 15)
-	}
-	exploitability := 8.22 * attackVector(cvss31.AttackVector) * attackComplexity(cvss31.AttackComplexity) * privilegesRequired(cvss31.PrivilegesRequired, cvss31.Scope) * userInteraction(cvss31.UserInteraction)
+	impact := cvss31.Impact()
+	exploitability := cvss31.Exploitability()
 	if impact <= 0 {
 		return 0
 	}
@@ -615,6 +609,18 @@ func (cvss31 CVSS31) BaseScore() float64 {
 		return roundup(math.Min(impact+exploitability, 10))
 	}
 	return roundup(math.Min(1.08*(impact+exploitability), 10))
+}
+
+func (cvss31 CVSS31) Impact() float64 {
+	iss := 1 - ((1 - cia(cvss31.Confidentiality)) * (1 - cia(cvss31.Integrity)) * (1 - cia(cvss31.Availability)))
+	if cvss31.Scope == "U" {
+		return 6.42 * iss
+	}
+	return 7.52*(iss-0.029) - 3.25*math.Pow(iss-0.02, 15)
+}
+
+func (cvss31 CVSS31) Exploitability() float64 {
+	return 8.22 * attackVector(cvss31.AttackVector) * attackComplexity(cvss31.AttackComplexity) * privilegesRequired(cvss31.PrivilegesRequired, cvss31.Scope) * userInteraction(cvss31.UserInteraction)
 }
 
 // TemporalScore returns the CVSS v3.1's temporal score.

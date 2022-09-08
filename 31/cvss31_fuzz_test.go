@@ -1,10 +1,8 @@
-package gocvss31_test
+package gocvss31
 
 import (
 	"reflect"
 	"testing"
-
-	gocvss31 "github.com/pandatix/go-cvss/31"
 )
 
 func FuzzParseVector(f *testing.F) {
@@ -13,7 +11,7 @@ func FuzzParseVector(f *testing.F) {
 	}
 
 	f.Fuzz(func(t *testing.T, vector string) {
-		cvss31, err := gocvss31.ParseVector(vector)
+		cvss31, err := ParseVector(vector)
 
 		if err != nil {
 			if cvss31 != nil {
@@ -32,7 +30,7 @@ func FuzzParseVector(f *testing.F) {
 		}
 
 		// Check the cvss31's vector gives as much info as input vector
-		newCVSS31, err := gocvss31.ParseVector(cvss31vector)
+		newCVSS31, err := ParseVector(cvss31vector)
 		if err != nil {
 			t.Fatal(err)
 		}

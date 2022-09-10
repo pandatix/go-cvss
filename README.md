@@ -76,6 +76,21 @@ We challenge any other Go implementation to do better :stuck_out_tongue_winking_
 
 ### CVSS v3.0
 
+```
+goos: linux
+goarch: amd64
+pkg: github.com/pandatix/go-cvss/30
+cpu: Intel(R) Core(TM) i5-2450M CPU @ 2.50GHz
+BenchmarkParseVector_Base-4                      1443836               808.4 ns/op           352 B/op          1 allocs/op
+BenchmarkParseVector_WithTempAndEnv-4             701901              1711 ns/op             352 B/op          1 allocs/op
+BenchmarkCVSS30Vector-4                          5593758               215.8 ns/op            96 B/op          1 allocs/op
+BenchmarkCVSS30Get-4                            27306528                41.66 ns/op            0 B/op          0 allocs/op
+BenchmarkCVSS30Set-4                            31862641                37.94 ns/op            0 B/op          0 allocs/op
+BenchmarkCVSS30BaseScore-4                       7769804               139.2 ns/op             0 B/op          0 allocs/op
+BenchmarkCVSS30TemporalScore-4                   5814230               189.1 ns/op             0 B/op          0 allocs/op
+BenchmarkCVSS30EnvironmentalScore-4              6402489               188.7 ns/op             0 B/op          0 allocs/op
+```
+
 ### CVSS v3.1
 
 ```

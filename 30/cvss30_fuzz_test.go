@@ -1,10 +1,8 @@
-package gocvss30_test
+package gocvss30
 
 import (
 	"reflect"
 	"testing"
-
-	gocvss30 "github.com/pandatix/go-cvss/30"
 )
 
 func FuzzParseVector(f *testing.F) {
@@ -13,7 +11,7 @@ func FuzzParseVector(f *testing.F) {
 	}
 
 	f.Fuzz(func(t *testing.T, vector string) {
-		cvss30, err := gocvss30.ParseVector(vector)
+		cvss30, err := ParseVector(vector)
 
 		if err != nil {
 			if cvss30 != nil {
@@ -29,7 +27,7 @@ func FuzzParseVector(f *testing.F) {
 				t.Fatalf("invalid CVSS v3.0 header of %s", cvss30vector)
 			}
 			// Check the cvss30's vector gives as much info as input vector
-			newCVSS30, err := gocvss30.ParseVector(cvss30vector)
+			newCVSS30, err := ParseVector(cvss30vector)
 			if err != nil {
 				t.Fatal(err)
 			}

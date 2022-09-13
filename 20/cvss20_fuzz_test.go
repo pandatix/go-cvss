@@ -1,9 +1,7 @@
-package gocvss20_test
+package gocvss20
 
 import (
 	"testing"
-
-	gocvss20 "github.com/pandatix/go-cvss/20"
 )
 
 func FuzzParseVector(f *testing.F) {
@@ -12,7 +10,7 @@ func FuzzParseVector(f *testing.F) {
 	}
 
 	f.Fuzz(func(t *testing.T, vector string) {
-		cvss20, err := gocvss20.ParseVector(vector)
+		cvss20, err := ParseVector(vector)
 
 		if err != nil {
 			if cvss20 != nil {

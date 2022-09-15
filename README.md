@@ -79,14 +79,14 @@ goos: linux
 goarch: amd64
 pkg: github.com/pandatix/go-cvss/20
 cpu: Intel(R) Core(TM) i5-2450M CPU @ 2.50GHz
-BenchmarkParseVector_Base-4             	 2089275	       572.9 ns/op	     224 B/op	       1 allocs/op
-BenchmarkParseVector_WithTempAndEnv-4   	 1000000	        1118 ns/op	     224 B/op	       1 allocs/op
-BenchmarkCVSS20Vector-4                 	 6806152	       176.3 ns/op	      80 B/op	       1 allocs/op
-BenchmarkCVSS20Get-4                    	46162280	       26.50 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCVSS20Set-4                    	42365036	       27.50 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCVSS20BaseScore-4              	20117143	       57.68 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCVSS20TemporalScore-4          	14383033	       83.66 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCVSS20EnvironmentalScore-4     	15307656	       79.48 ns/op	       0 B/op	       0 allocs/op
+BenchmarkParseVector_Base-4                  1750524           631.0 ns/op       224 B/op          1 allocs/op
+BenchmarkParseVector_WithTempAndEnv-4         983698            2216 ns/op       224 B/op          1 allocs/op
+BenchmarkCVSS20Vector-4                      6241333           189.2 ns/op        80 B/op          1 allocs/op
+BenchmarkCVSS20Get-4                        41707770           38.30 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS20Set-4                        35828242           31.82 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS20BaseScore-4                  15570378           67.29 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS20TemporalScore-4              12213030           92.93 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS20EnvironmentalScore-4         12509287           92.03 ns/op         0 B/op          0 allocs/op
 ```
 
 ### CVSS v3.0
@@ -96,14 +96,14 @@ goos: linux
 goarch: amd64
 pkg: github.com/pandatix/go-cvss/30
 cpu: Intel(R) Core(TM) i5-2450M CPU @ 2.50GHz
-BenchmarkParseVector_Base-4             	 1458514	       843.4 ns/op	     352 B/op	       1 allocs/op
-BenchmarkParseVector_WithTempAndEnv-4   	  703789	        2067 ns/op	     352 B/op	       1 allocs/op
-BenchmarkCVSS30Vector-4                 	 4587404	       237.0 ns/op	      96 B/op	       1 allocs/op
-BenchmarkCVSS30Get-4                    	26877397	       51.38 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCVSS30Set-4                    	32284153	       38.53 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCVSS30BaseScore-4              	 8275440	       145.4 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCVSS30TemporalScore-4          	 6054021	       195.7 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCVSS30EnvironmentalScore-4     	 6230708	       191.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkParseVector_Base-4                  1564752           793.1 ns/op       352 B/op          1 allocs/op
+BenchmarkParseVector_WithTempAndEnv-4         763330            1588 ns/op       352 B/op          1 allocs/op
+BenchmarkCVSS30Vector-4                      4708683           247.6 ns/op        96 B/op          1 allocs/op
+BenchmarkCVSS30Get-4                        23825982           43.71 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS30Set-4                        31735555           37.64 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS30BaseScore-4                   7696878           151.7 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS30TemporalScore-4               5761302           200.7 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS30EnvironmentalScore-4          5636908           206.6 ns/op         0 B/op          0 allocs/op
 ```
 
 ### CVSS v3.1
@@ -113,14 +113,14 @@ goos: linux
 goarch: amd64
 pkg: github.com/pandatix/go-cvss/31
 cpu: Intel(R) Core(TM) i5-2450M CPU @ 2.50GHz
-BenchmarkParseVector_Base-4             	 1445559	       825.3 ns/op	     352 B/op	       1 allocs/op
-BenchmarkParseVector_WithTempAndEnv-4   	  658578	        1836 ns/op	     352 B/op	       1 allocs/op
-BenchmarkCVSS31Vector-4                 	 5087984	       244.1 ns/op	      96 B/op	       1 allocs/op
-BenchmarkCVSS31Get-4                    	28350058	       41.40 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCVSS31Set-4                    	30340425	       40.16 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCVSS31BaseScore-4              	 8535666	       139.3 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCVSS31TemporalScore-4          	 6004561	       189.7 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCVSS31EnvironmentalScore-4     	 5937879	       184.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkParseVector_Base-4                  1543551           768.7 ns/op       352 B/op          1 allocs/op
+BenchmarkParseVector_WithTempAndEnv-4         754154            1614 ns/op       352 B/op          1 allocs/op
+BenchmarkCVSS31Vector-4                      4671334           254.7 ns/op        96 B/op          1 allocs/op
+BenchmarkCVSS31Get-4                        24025206           43.89 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS31Set-4                        31292902           40.29 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS31BaseScore-4                   7711374           177.9 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS31TemporalScore-4               5245575           234.1 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS31EnvironmentalScore-4          4021914           293.4 ns/op         0 B/op          0 allocs/op
 ```
 
 ## Feedbacks

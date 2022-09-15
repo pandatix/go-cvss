@@ -9,7 +9,6 @@ var (
 	ErrInvalidCVSSHeader  = errors.New("invalid CVSS v3.0 header")
 	ErrTooShortVector     = errors.New("too short vector")
 	ErrInvalidMetricValue = errors.New("invalid metric value")
-	ErrInvalidCVSSVersion = errors.New("invalid CVSS version")
 	ErrOutOfBoundsScore   = errors.New("out of bounds score")
 )
 
@@ -36,18 +35,6 @@ func (err ErrDefinedN) Error() string {
 }
 
 var _ error = (*ErrDefinedN)(nil)
-
-// ErrCouple is an error returned by ParseVector when the
-// given couple ("<attribute>:<value>") can't be properly splitted.
-type ErrCouple struct {
-	Couple string
-}
-
-func (err ErrCouple) Error() string {
-	return fmt.Sprintf("given couple %s can't be properly splitted", err.Couple)
-}
-
-var _ error = (*ErrCouple)(nil)
 
 // ErrInvalidMetric is an error returned when a given
 // metric does not exist.

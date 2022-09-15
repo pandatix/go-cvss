@@ -21,6 +21,7 @@ func ParseVector(vector string) (*CVSS31, error) {
 	}
 	vector = vector[len(header):]
 
+	// Allocate CVSS v3.1 object
 	cvss31 := &CVSS31{
 		base: base{},
 		temporal: temporal{
@@ -43,20 +44,21 @@ func ParseVector(vector string) (*CVSS31, error) {
 		},
 	}
 
-	// Split and handle on the fly
-	start := 0
+	// Parse vector
 	kvm := kvm{}
-	for i := 0; i < len(vector); i++ {
-		c := vector[i]
-		if c == '/' {
-			if err := handleCouple(vector[start:i], cvss31, kvm); err != nil {
+	start := 0
+	l := len(vector)
+	for i := 0; i <= l; i++ {
+		if i == l || vector[i] == '/' {
+			a, v := splitCouple(vector[start:i])
+			if err := kvm.Set(a); err != nil {
+				return nil, err
+			}
+			if err := cvss31.Set(a, v); err != nil {
 				return nil, err
 			}
 			start = i + 1
 		}
-	}
-	if err := handleCouple(vector[start:], cvss31, kvm); err != nil {
-		return nil, err
 	}
 
 	// Check all base score metrics are defined
@@ -88,148 +90,13 @@ func ParseVector(vector string) (*CVSS31, error) {
 	return cvss31, nil
 }
 
-// kvm stands for Key-Value Map, and is used to make sure each
-// metric is defined only once, as documented by the CVSS v3.1
-// specification document, section 6 "Vector String" paragraph 3.
-// Using this avoids a map that escapes to heap for each call of
-// ParseVector, as its size is known and wont evolve.
-type kvm struct {
-	// base metrics
-	av, ac, pr, ui, s, c, i, a bool
-	// temporal metrics
-	e, rl, rc bool
-	// environmental metrics
-	cr, ir, ar, mav, mac, mpr, mui, ms, mc, mi, ma bool
-}
-
-func (kvm kvm) isSet(abv string) (bool, error) {
-	switch abv {
-	case "AV":
-		return kvm.av, nil
-	case "AC":
-		return kvm.ac, nil
-	case "PR":
-		return kvm.pr, nil
-	case "UI":
-		return kvm.ui, nil
-	case "S":
-		return kvm.s, nil
-	case "C":
-		return kvm.c, nil
-	case "I":
-		return kvm.i, nil
-	case "A":
-		return kvm.a, nil
-	case "E":
-		return kvm.e, nil
-	case "RL":
-		return kvm.rl, nil
-	case "RC":
-		return kvm.rc, nil
-	case "CR":
-		return kvm.cr, nil
-	case "IR":
-		return kvm.ir, nil
-	case "AR":
-		return kvm.ar, nil
-	case "MAV":
-		return kvm.mav, nil
-	case "MAC":
-		return kvm.mac, nil
-	case "MPR":
-		return kvm.mpr, nil
-	case "MUI":
-		return kvm.mui, nil
-	case "MS":
-		return kvm.ms, nil
-	case "MC":
-		return kvm.mc, nil
-	case "MI":
-		return kvm.mi, nil
-	case "MA":
-		return kvm.ma, nil
-	default:
-		return false, &ErrInvalidMetric{Abv: abv}
-	}
-}
-
-func (kvm *kvm) set(abv string) {
-	switch abv {
-	case "AV":
-		kvm.av = true
-	case "AC":
-		kvm.ac = true
-	case "PR":
-		kvm.pr = true
-	case "UI":
-		kvm.ui = true
-	case "S":
-		kvm.s = true
-	case "C":
-		kvm.c = true
-	case "I":
-		kvm.i = true
-	case "A":
-		kvm.a = true
-	case "E":
-		kvm.e = true
-	case "RL":
-		kvm.rl = true
-	case "RC":
-		kvm.rc = true
-	case "CR":
-		kvm.cr = true
-	case "IR":
-		kvm.ir = true
-	case "AR":
-		kvm.ar = true
-	case "MAV":
-		kvm.mav = true
-	case "MAC":
-		kvm.mac = true
-	case "MPR":
-		kvm.mpr = true
-	case "MUI":
-		kvm.mui = true
-	case "MS":
-		kvm.ms = true
-	case "MC":
-		kvm.mc = true
-	case "MI":
-		kvm.mi = true
-	case "MA":
-		kvm.ma = true
-	default:
-		panic(&ErrInvalidMetric{Abv: abv})
-	}
-}
-
-func handleCouple(couple string, cvss31 *CVSS31, kvm kvm) error {
-	abv, v, err := splitCouple(couple)
-	if err != nil {
-		return err
-	}
-	isSet, err := kvm.isSet(abv)
-	if err != nil {
-		return err
-	}
-	if isSet {
-		return &ErrDefinedN{Abv: abv}
-	}
-	if err := cvss31.Set(abv, v); err != nil {
-		return err
-	}
-	kvm.set(abv)
-	return nil
-}
-
-func splitCouple(couple string) (string, string, error) {
+func splitCouple(couple string) (string, string) {
 	for i := 0; i < len(couple); i++ {
 		if couple[i] == ':' {
-			return couple[:i], couple[i+1:], nil
+			return couple[:i], couple[i+1:]
 		}
 	}
-	return "", "", &ErrCouple{Couple: couple}
+	return couple, ""
 }
 
 // Vector returns the CVSS v3.1 vector string representation.
@@ -832,4 +699,75 @@ func mod(base, modified string) string {
 		return modified
 	}
 	return base
+}
+
+// kvm stands for Key-Value Map, and is used to make sure each
+// metric is defined only once, as documented by the CVSS v3.1
+// specification document, section 6 "Vector String" paragraph 3.
+// Using this avoids a map that escapes to heap for each call of
+// ParseVector, as its size is known and wont evolve.
+type kvm struct {
+	// base metrics
+	av, ac, pr, ui, s, c, i, a bool
+	// temporal metrics
+	e, rl, rc bool
+	// environmental metrics
+	cr, ir, ar, mav, mac, mpr, mui, ms, mc, mi, ma bool
+}
+
+func (kvm *kvm) Set(abv string) error {
+	var dst *bool
+	switch abv {
+	case "AV":
+		dst = &kvm.av
+	case "AC":
+		dst = &kvm.ac
+	case "PR":
+		dst = &kvm.pr
+	case "UI":
+		dst = &kvm.ui
+	case "S":
+		dst = &kvm.s
+	case "C":
+		dst = &kvm.c
+	case "I":
+		dst = &kvm.i
+	case "A":
+		dst = &kvm.a
+	case "E":
+		dst = &kvm.e
+	case "RL":
+		dst = &kvm.rl
+	case "RC":
+		dst = &kvm.rc
+	case "CR":
+		dst = &kvm.cr
+	case "IR":
+		dst = &kvm.ir
+	case "AR":
+		dst = &kvm.ar
+	case "MAV":
+		dst = &kvm.mav
+	case "MAC":
+		dst = &kvm.mac
+	case "MPR":
+		dst = &kvm.mpr
+	case "MUI":
+		dst = &kvm.mui
+	case "MS":
+		dst = &kvm.ms
+	case "MC":
+		dst = &kvm.mc
+	case "MI":
+		dst = &kvm.mi
+	case "MA":
+		dst = &kvm.ma
+	default:
+		return &ErrInvalidMetric{Abv: abv}
+	}
+	if *dst {
+		return &ErrDefinedN{Abv: abv}
+	}
+	*dst = true
+	return nil
 }

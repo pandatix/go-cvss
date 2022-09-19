@@ -10,4 +10,6 @@ Thank you for your contribution.
 
 ## Refering to this repository
 
-To refer to this repository using a CPE v2.3, please use `cpe:2.3:a:pandatix:go_cvss:*:*:*:*:*:*:*:*` with the `version` set to the tag you are using.
+To refer to this repository using a CPE v2.3, please use `cpe:2.3:a:go-cvss_project:go-cvss:*:*:*:*:*:*:*:*` with the `version` set to the tag you are using.
+
+In case you used `cpe:2.3:a:pandatix:go_cvss:*:*:*:*:*:*:*:*` as it was documented before, please replace with the current one in order to detect possible future vulnerabilities. This issue is due to the NVD/CPE dictionnary maintainers as they forced the use of this one.

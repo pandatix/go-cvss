@@ -4,6 +4,7 @@
 [![go report](https://goreportcard.com/badge/github.com/pandatix/go-cvss)](https://goreportcard.com/report/github.com/pandatix/go-cvss)
 [![codecov](https://codecov.io/gh/pandatix/go-cvss/branch/master/graph/badge.svg)](https://codecov.io/gh/pandatix/go-cvss)
 [![CI](https://github.com/pandatix/go-cvss/actions/workflows/ci.yaml/badge.svg)](https://github.com/pandatix/go-cvss/actions?query=workflow%3Aci+)
+[![CodeQL](https://github.com/pandatix/go-cvss/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/pandatix/go-cvss/actions/workflows/codeql-analysis.yml)
 
 Go-CVSS is a low-allocation Go module made to manipulate Common Vulnerability Scoring System (CVSS)
 

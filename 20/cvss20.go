@@ -16,11 +16,7 @@ var order = [][]string{
 // ParseVector parses a CVSS v2.0 vector.
 func ParseVector(vector string) (*CVSS20, error) {
 	// Split parts
-	pts, l := split(vector)
-	if l != 6 && l != 9 && l != 14 {
-		return nil, ErrTooShortVector
-	}
-	pts = pts[:l]
+	pts := split(vector)
 
 	// Work on each CVSS part
 	cvss20 := &CVSS20{
@@ -43,10 +39,20 @@ func ParseVector(vector string) (*CVSS20, error) {
 	i := 0
 	for _, pt := range pts {
 		abv, v, _ := strings.Cut(pt, ":")
-		if slci == 4 {
+		tgt := ""
+		switch slci {
+		case 0, 2:
+			tgt = order[slci][i]
+		case 1:
+			tgt = order[1][i]
+			if i == 0 && tgt != abv {
+				slci++
+				tgt = order[2][0]
+			}
+		default:
 			return nil, &ErrDefinedN{Abv: abv}
 		}
-		if abv != order[slci][i] {
+		if abv != tgt {
 			return nil, ErrInvalidMetricOrder
 		}
 
@@ -61,6 +67,10 @@ func ParseVector(vector string) (*CVSS20, error) {
 			i = 0
 		}
 	}
+	// Check whole last metric group is specified in vector (=> i == 0)
+	if i != 0 {
+		return nil, ErrTooShortVector
+	}
 
 	return cvss20, nil
 }
@@ -71,7 +81,7 @@ var splitPool = sync.Pool{
 	},
 }
 
-func split(vector string) ([]string, int) {
+func split(vector string) []string {
 	partsPtr := splitPool.Get()
 	defer splitPool.Put(partsPtr)
 	parts := partsPtr.([]string)
@@ -93,7 +103,7 @@ func split(vector string) ([]string, int) {
 		}
 	}
 	parts[curr] = vector[start:]
-	return parts, curr + 1
+	return parts[:curr+1]
 }
 
 func (cvss20 CVSS20) Vector() string {

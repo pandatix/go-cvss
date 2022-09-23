@@ -115,6 +115,76 @@ var testsParseVector = map[string]struct {
 		},
 		ExpectedErr: nil,
 	},
+	"base-and-environmental": {
+		// This test covers the case where the temporal group is
+		// not defined. This case can be found in the wild (e.g. NIST).
+		Vector: "AV:L/AC:M/Au:S/C:N/I:N/A:P/CDP:N/TD:ND/CR:M/IR:ND/AR:ND",
+		ExpectedCVSS20: &CVSS20{
+			base: base{
+				accessVector:          "L",
+				accessComplexity:      "M",
+				authentication:        "S",
+				confidentialityImpact: "N",
+				integrityImpact:       "N",
+				availabilityImpact:    "P",
+			},
+			temporal: temporal{
+				exploitability:   "ND",
+				remediationLevel: "ND",
+				reportConfidence: "ND",
+			},
+			environmental: environmental{
+				collateralDamagePotential:  "N",
+				targetDistribution:         "ND",
+				confidentialityRequirement: "M",
+				integrityRequirement:       "ND",
+				availabilityRequirement:    "ND",
+			},
+		},
+		ExpectedErr: nil,
+	},
+	"Fuzz_b0c5c63b20b726efad1741c656ed3c1f9ee8c5dc00bb9c938f3e01d11153d51f": {
+		// This fuzz crashers enabled detecting that a CVSS v2.0 vector
+		// with not any temporal metric defined but some environmental ones
+		// does not export the same string as when parsed.
+		// It raises the following question: "does the whole metric group must
+		// me completly specified in order to the vector to be valid ?". This
+		// does not find an answer in the first.org's specification document,
+		// but given the fact that the NVD CVSS v2.0 calculator emits a metric
+		// group as soon as one of it's metrics is different from "ND", this
+		// implementation took the path of unvalidating it because of a lack of
+		// metrics.
+		Vector:         "AV:A/AC:L/Au:N/C:C/I:C/A:C/CDP:H/TD:H/CR:H",
+		ExpectedCVSS20: nil,
+		ExpectedErr:    ErrTooShortVector,
+	},
+	"Fuzz_b0c5c63b20b726efad1741c656ed3c1f9ee8c5dc00bb9c938f3e01d11153d51f_verified": {
+		// This test case proves the possibility of previous fuzz crasher.
+		Vector: "AV:A/AC:L/Au:N/C:C/I:C/A:C/CDP:H/TD:H/CR:H/IR:ND/AR:ND",
+		ExpectedCVSS20: &CVSS20{
+			base: base{
+				accessVector:          "A",
+				accessComplexity:      "L",
+				authentication:        "N",
+				confidentialityImpact: "C",
+				integrityImpact:       "C",
+				availabilityImpact:    "C",
+			},
+			temporal: temporal{
+				exploitability:   "ND",
+				remediationLevel: "ND",
+				reportConfidence: "ND",
+			},
+			environmental: environmental{
+				collateralDamagePotential:  "H",
+				targetDistribution:         "H",
+				confidentialityRequirement: "H",
+				integrityRequirement:       "ND",
+				availabilityRequirement:    "ND",
+			},
+		},
+		ExpectedErr: nil,
+	},
 	"Fuzz_50620a37c4a7716a77a14602b4bcc7b02e6f751d0a714ed796d9b04402c745ac": {
 		// This fuzz crasher enabled detecting that the split function
 		// (comming from the optimization step) was doing an Out-Of-Bounds
@@ -136,6 +206,11 @@ func TestParseVector(t *testing.T) {
 
 			assert.Equal(tt.ExpectedCVSS20, cvss20)
 			assert.Equal(tt.ExpectedErr, err)
+
+			if cvss20 != nil {
+				newVec := cvss20.Vector()
+				assert.Equal(tt.Vector, newVec)
+			}
 		})
 	}
 }

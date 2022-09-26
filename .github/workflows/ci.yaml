@@ -57,6 +57,13 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+      
+      - name: Upload coverage to Coveralls
+        if: ${{ matrix.update-coverage }}
+        uses: shogo82148/actions-goveralls@v1
+        with:
+          path-to-profile: coverage.txt
+          gtihub-token: ${{ secrets.COVERALLS_TOKEN }}
 
   go-lint:
     runs-on: ubuntu-latest

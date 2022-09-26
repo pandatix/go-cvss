@@ -51,12 +51,6 @@ jobs:
 
       - name: Run go test
         run: go test -v -race -coverprofile coverage.txt ./...
-
-      - name: Upload coverage to Codecov
-        if: ${{ matrix.update-coverage }}
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
       
       - name: Upload coverage to Coveralls
         if: ${{ matrix.update-coverage }}

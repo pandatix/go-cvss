@@ -1,46 +1,50 @@
 package gocvss31
 
-// The following values are used to reduce drastically the memory
-// impact of a *CVSS31 which used string before as primar type.
+// The following values are the enumerations of each metric possible values.
+// Do not change their order as it is vital to the implementation.
+//
+// Those are used to get a highly memory-performant implementation.
+// The 6 bytes are used as follows, using the uint8 type.
+//
+//    u0       u1       u2       u3       u4       u5
+// /------\ /------\ /------\ /------\ /------\ /------\
+// ........ ........ ........ ........ ........ ........
+// \/|\/||\_/\/\/\_/ \_/\/\/\_/\/\_/\/ \/\/\/\/ \/\/
+// AV|PR|S C  I A E   RL |CR IR |MAV |MPR |MS | MI |
+//   AC UI              RC     AR   MAC  MUI MC   MA
 
 // Base
 
 const (
-	av_ndef uint8 = iota
-	av_n
+	av_n uint8 = iota
 	av_a
 	av_l
 	av_p
 )
 
 const (
-	ac_ndef uint8 = iota
-	ac_l
+	ac_l uint8 = iota
 	ac_h
 )
 
 const (
-	pr_ndef uint8 = iota
-	pr_n
+	pr_n uint8 = iota
 	pr_l
 	pr_h
 )
 
 const (
-	ui_ndef uint8 = iota
-	ui_n
+	ui_n uint8 = iota
 	ui_r
 )
 
 const (
-	s_ndef uint8 = iota
-	s_u
+	s_u uint8 = iota
 	s_c
 )
 
 const (
-	cia_ndef uint8 = iota
-	cia_h
+	cia_h uint8 = iota
 	cia_l
 	cia_n
 )

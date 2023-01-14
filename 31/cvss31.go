@@ -23,34 +23,12 @@ func ParseVector(vector string) (*CVSS31, error) {
 
 	// Allocate CVSS v3.1 object
 	cvss31 := &CVSS31{
-		base: base{
-			attackVector:       av_ndef,
-			attackComplexity:   ac_ndef,
-			privilegesRequired: pr_ndef,
-			userInteraction:    ui_ndef,
-			scope:              s_ndef,
-			confidentiality:    cia_ndef,
-			integrity:          cia_ndef,
-			availability:       cia_ndef,
-		},
-		temporal: temporal{
-			exploitCodeMaturity: e_x,
-			remediationLevel:    rl_x,
-			reportConfidence:    rc_x,
-		},
-		environmental: environmental{
-			confidentialityRequirement: ciar_x,
-			integrityRequirement:       ciar_x,
-			availabilityRequirement:    ciar_x,
-			modifiedAttackVector:       mav_x,
-			modifiedAttackComplexity:   mac_x,
-			modifiedPrivilegesRequired: mpr_x,
-			modifiedUserInteraction:    mui_x,
-			modifiedScope:              ms_x,
-			modifiedConfidentiality:    mcia_x,
-			modifiedIntegrity:          mcia_x,
-			modifiedAvailability:       mcia_x,
-		},
+		u0: 0,
+		u1: 0,
+		u2: 0,
+		u3: 0,
+		u4: 0,
+		u5: 0, // last 4 bits are not used
 	}
 
 	// Parse vector
@@ -71,34 +49,36 @@ func ParseVector(vector string) (*CVSS31, error) {
 	}
 
 	// Check all base score metrics are defined
-	if cvss31.attackVector == av_ndef {
+	if !kvm.av {
 		return nil, &ErrMissing{Abv: "AV"}
 	}
-	if cvss31.attackComplexity == ac_ndef {
+	if !kvm.ac {
 		return nil, &ErrMissing{Abv: "AC"}
 	}
-	if cvss31.privilegesRequired == pr_ndef {
+	if !kvm.pr {
 		return nil, &ErrMissing{Abv: "PR"}
 	}
-	if cvss31.userInteraction == ui_ndef {
+	if !kvm.ui {
 		return nil, &ErrMissing{Abv: "UI"}
 	}
-	if cvss31.scope == s_ndef {
+	if !kvm.s {
 		return nil, &ErrMissing{Abv: "S"}
 	}
-	if cvss31.confidentiality == cia_ndef {
+	if !kvm.c {
 		return nil, &ErrMissing{Abv: "C"}
 	}
-	if cvss31.integrity == cia_ndef {
+	if !kvm.i {
 		return nil, &ErrMissing{Abv: "I"}
 	}
-	if cvss31.availability == cia_ndef {
+	if !kvm.a {
 		return nil, &ErrMissing{Abv: "A"}
 	}
 
 	return cvss31, nil
 }
 
+// splitCouple is more efficient than `strings.Cut` as it is
+// specialised on the ':' char.
 func splitCouple(couple string) (string, string) {
 	for i := 0; i < len(couple); i++ {
 		if couple[i] == ':' {
@@ -115,41 +95,34 @@ func (cvss31 CVSS31) Vector() string {
 	b = append(b, header...)
 
 	// Base
-	mandatory(&b, "AV:", must(cvss31.Get("AV")))
-	mandatory(&b, "/AC:", must(cvss31.Get("AC")))
-	mandatory(&b, "/PR:", must(cvss31.Get("PR")))
-	mandatory(&b, "/UI:", must(cvss31.Get("UI")))
-	mandatory(&b, "/S:", must(cvss31.Get("S")))
-	mandatory(&b, "/C:", must(cvss31.Get("C")))
-	mandatory(&b, "/I:", must(cvss31.Get("I")))
-	mandatory(&b, "/A:", must(cvss31.Get("A")))
+	mandatory(&b, "AV:", cvss31.get("AV"))
+	mandatory(&b, "/AC:", cvss31.get("AC"))
+	mandatory(&b, "/PR:", cvss31.get("PR"))
+	mandatory(&b, "/UI:", cvss31.get("UI"))
+	mandatory(&b, "/S:", cvss31.get("S"))
+	mandatory(&b, "/C:", cvss31.get("C"))
+	mandatory(&b, "/I:", cvss31.get("I"))
+	mandatory(&b, "/A:", cvss31.get("A"))
 
 	// Temporal
-	notMandatory(&b, "/E:", must(cvss31.Get("E")))
-	notMandatory(&b, "/RL:", must(cvss31.Get("RL")))
-	notMandatory(&b, "/RC:", must(cvss31.Get("RC")))
+	notMandatory(&b, "/E:", cvss31.get("E"))
+	notMandatory(&b, "/RL:", cvss31.get("RL"))
+	notMandatory(&b, "/RC:", cvss31.get("RC"))
 
 	// Environmental
-	notMandatory(&b, "/CR:", must(cvss31.Get("CR")))
-	notMandatory(&b, "/IR:", must(cvss31.Get("IR")))
-	notMandatory(&b, "/AR:", must(cvss31.Get("AR")))
-	notMandatory(&b, "/MAV:", must(cvss31.Get("MAV")))
-	notMandatory(&b, "/MAC:", must(cvss31.Get("MAC")))
-	notMandatory(&b, "/MPR:", must(cvss31.Get("MPR")))
-	notMandatory(&b, "/MUI:", must(cvss31.Get("MUI")))
-	notMandatory(&b, "/MS:", must(cvss31.Get("MS")))
-	notMandatory(&b, "/MC:", must(cvss31.Get("MC")))
-	notMandatory(&b, "/MI:", must(cvss31.Get("MI")))
-	notMandatory(&b, "/MA:", must(cvss31.Get("MA")))
+	notMandatory(&b, "/CR:", cvss31.get("CR"))
+	notMandatory(&b, "/IR:", cvss31.get("IR"))
+	notMandatory(&b, "/AR:", cvss31.get("AR"))
+	notMandatory(&b, "/MAV:", cvss31.get("MAV"))
+	notMandatory(&b, "/MAC:", cvss31.get("MAC"))
+	notMandatory(&b, "/MPR:", cvss31.get("MPR"))
+	notMandatory(&b, "/MUI:", cvss31.get("MUI"))
+	notMandatory(&b, "/MS:", cvss31.get("MS"))
+	notMandatory(&b, "/MC:", cvss31.get("MC"))
+	notMandatory(&b, "/MI:", cvss31.get("MI"))
+	notMandatory(&b, "/MA:", cvss31.get("MA"))
 
 	return *(*string)(unsafe.Pointer(&b))
-}
-
-func must[T any](t T, err error) T {
-	if err != nil {
-		panic(err)
-	}
-	return t
 }
 
 func lenVec(cvss31 *CVSS31) int {
@@ -165,13 +138,13 @@ func lenVec(cvss31 *CVSS31) int {
 	// - E: 3
 	// - RL, RC: 4
 	// - each one adds a separator
-	if cvss31.exploitCodeMaturity != e_x {
+	if cvss31.get("E") != "X" {
 		l += 4
 	}
-	if cvss31.remediationLevel != rl_x {
+	if cvss31.get("RL") != "X" {
 		l += 5
 	}
-	if cvss31.reportConfidence != rc_x {
+	if cvss31.get("RC") != "X" {
 		l += 5
 	}
 
@@ -179,37 +152,37 @@ func lenVec(cvss31 *CVSS31) int {
 	// - CR, IR, AR, MS, MC, MI, MA: 4
 	// - MAV, MAC, MPR, MUI: 5
 	// - each one adds a separator
-	if cvss31.confidentialityRequirement != ciar_x {
+	if cvss31.get("CR") != "X" {
 		l += 5
 	}
-	if cvss31.integrityRequirement != ciar_x {
+	if cvss31.get("IR") != "X" {
 		l += 5
 	}
-	if cvss31.availabilityRequirement != ciar_x {
+	if cvss31.get("AR") != "X" {
 		l += 5
 	}
-	if cvss31.modifiedScope != ms_x {
+	if cvss31.get("MS") != "X" {
 		l += 5
 	}
-	if cvss31.modifiedConfidentiality != mcia_x {
+	if cvss31.get("MC") != "X" {
 		l += 5
 	}
-	if cvss31.modifiedIntegrity != mcia_x {
+	if cvss31.get("MI") != "X" {
 		l += 5
 	}
-	if cvss31.modifiedAvailability != mcia_x {
+	if cvss31.get("MA") != "X" {
 		l += 5
 	}
-	if cvss31.modifiedAttackVector != mav_x {
+	if cvss31.get("MAV") != "X" {
 		l += 6
 	}
-	if cvss31.modifiedAttackComplexity != mac_x {
+	if cvss31.get("MAC") != "X" {
 		l += 6
 	}
-	if cvss31.modifiedPrivilegesRequired != mpr_x {
+	if cvss31.get("MPR") != "X" {
 		l += 6
 	}
-	if cvss31.modifiedUserInteraction != mui_x {
+	if cvss31.get("MUI") != "X" {
 		l += 6
 	}
 
@@ -230,71 +203,8 @@ func notMandatory(b *[]byte, pre, v string) {
 
 // CVSS31 embeds all the metric values defined by the CVSS v3.1
 // specification.
-// Attributes values must not be manipulated directly. Use Get
-// and Set methods.
 type CVSS31 struct {
-	base
-	temporal
-	environmental
-}
-
-// base is the group of metrics defined with such name by the
-// first.org CVSS v3.1 specification.
-type base struct {
-	// AV -> [N,A,L,P]. Mandatory
-	attackVector uint8
-	// AC -> [L,H]. Mandatory
-	attackComplexity uint8
-	// PR -> [N,L,H]. Mandatory
-	privilegesRequired uint8
-	// UI -> [N,R]. Mandatory
-	userInteraction uint8
-	// S -> [U,C]. Mandatory
-	scope uint8
-	// C -> [H,L,N]. Mandatory
-	confidentiality uint8
-	// I -> [H,L,N]. Mandatory
-	integrity uint8
-	// A -> [H,L,N]. Mandatory
-	availability uint8
-}
-
-// temporal is the group of metrics defined with such name by the
-// first.org CVSS v3.1 specification.
-type temporal struct {
-	// E -> [X,H,F,P,U]. Not mandatory
-	exploitCodeMaturity uint8
-	// RL -> [X,U,W,T,O]. Not mandatory
-	remediationLevel uint8
-	// RC -> [X,C,R,U]. Not mandatory
-	reportConfidence uint8
-}
-
-// environmental is the group of metrics defined with such name by the
-// first.org CVSS v3.1 specification.
-type environmental struct {
-	// CR -> [X,H,M,L]. Not mandatory
-	confidentialityRequirement uint8
-	// IR -> [X,H,M,L]. Not mandatory
-	integrityRequirement uint8
-	// AR -> [X,H,M,L]. Not mandatory
-	availabilityRequirement uint8
-	// MAV -> [X,N,A,L,P]. Not mandatory
-	modifiedAttackVector uint8
-	// MAC -> [X,L,H]. Not mandatory
-	modifiedAttackComplexity uint8
-	// MPR -> [X,N,L,H]. Not mandatory
-	modifiedPrivilegesRequired uint8
-	// MUI -> [X,N,R]. Not mandatory
-	modifiedUserInteraction uint8
-	// MS -> [X,U,C]. Not mandatory
-	modifiedScope uint8
-	// MC -> [X,N,L,H]. Not mandatory
-	modifiedConfidentiality uint8
-	// MI -> [X,N,L,H]. Not mandatory
-	modifiedIntegrity uint8
-	// MA -> [X,N,L,H]. Not mandatory
-	modifiedAvailability uint8
+	u0, u1, u2, u3, u4, u5 uint8
 }
 
 // Get returns the value of the given metric abbreviation.
@@ -302,7 +212,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 	switch abv {
 	// Base
 	case "AV":
-		switch cvss31.attackVector {
+		v := (cvss31.u0 & 0b11000000) >> 6
+		switch v {
 		case av_n:
 			r = "N"
 		case av_a:
@@ -313,14 +224,16 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "P"
 		}
 	case "AC":
-		switch cvss31.attackComplexity {
+		v := (cvss31.u0 & 0b00100000) >> 5
+		switch v {
 		case ac_l:
 			r = "L"
 		case ac_h:
 			r = "H"
 		}
 	case "PR":
-		switch cvss31.privilegesRequired {
+		v := (cvss31.u0 & 0b00011000) >> 3
+		switch v {
 		case pr_n:
 			r = "N"
 		case pr_l:
@@ -329,21 +242,24 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "H"
 		}
 	case "UI":
-		switch cvss31.userInteraction {
+		v := (cvss31.u0 & 0b00000100) >> 2
+		switch v {
 		case ui_n:
 			r = "N"
 		case ui_r:
 			r = "R"
 		}
 	case "S":
-		switch cvss31.scope {
+		v := (cvss31.u0 & 0b00000010) >> 1
+		switch v {
 		case s_u:
 			r = "U"
 		case s_c:
 			r = "C"
 		}
 	case "C":
-		switch cvss31.confidentiality {
+		v := ((cvss31.u0 & 0b00000001) << 1) | (cvss31.u1&0b10000000)>>7
+		switch v {
 		case cia_h:
 			r = "H"
 		case cia_l:
@@ -352,7 +268,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "N"
 		}
 	case "I":
-		switch cvss31.integrity {
+		v := (cvss31.u1 & 0b01100000) >> 5
+		switch v {
 		case cia_h:
 			r = "H"
 		case cia_l:
@@ -361,7 +278,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "N"
 		}
 	case "A":
-		switch cvss31.availability {
+		v := (cvss31.u1 & 0b00011000) >> 3
+		switch v {
 		case cia_h:
 			r = "H"
 		case cia_l:
@@ -372,7 +290,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 
 	// Temporal
 	case "E":
-		switch cvss31.exploitCodeMaturity {
+		v := cvss31.u1 & 0b00000111
+		switch v {
 		case e_x:
 			r = "X"
 		case e_h:
@@ -385,7 +304,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "U"
 		}
 	case "RL":
-		switch cvss31.remediationLevel {
+		v := (cvss31.u2 & 0b11100000) >> 5
+		switch v {
 		case rl_x:
 			r = "X"
 		case rl_u:
@@ -398,7 +318,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "O"
 		}
 	case "RC":
-		switch cvss31.reportConfidence {
+		v := (cvss31.u2 & 0b00011000) >> 3
+		switch v {
 		case rc_x:
 			r = "X"
 		case rc_c:
@@ -411,7 +332,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 
 	// Environmental
 	case "CR":
-		switch cvss31.confidentialityRequirement {
+		v := (cvss31.u2 & 0b00000110) >> 1
+		switch v {
 		case ciar_x:
 			r = "X"
 		case ciar_h:
@@ -422,7 +344,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "L"
 		}
 	case "IR":
-		switch cvss31.integrityRequirement {
+		v := ((cvss31.u2 & 0b00000001) << 1) | ((cvss31.u3 & 0b10000000) >> 7)
+		switch v {
 		case ciar_x:
 			r = "X"
 		case ciar_h:
@@ -433,7 +356,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "L"
 		}
 	case "AR":
-		switch cvss31.availabilityRequirement {
+		v := (cvss31.u3 & 0b01100000) >> 5
+		switch v {
 		case ciar_x:
 			r = "X"
 		case ciar_h:
@@ -444,7 +368,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "L"
 		}
 	case "MAV":
-		switch cvss31.modifiedAttackVector {
+		v := (cvss31.u3 & 0b00011100) >> 2
+		switch v {
 		case mav_x:
 			r = "X"
 		case mav_n:
@@ -457,7 +382,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "P"
 		}
 	case "MAC":
-		switch cvss31.modifiedAttackComplexity {
+		v := cvss31.u3 & 0b00000011
+		switch v {
 		case mac_x:
 			r = "X"
 		case mac_l:
@@ -466,7 +392,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "H"
 		}
 	case "MPR":
-		switch cvss31.modifiedPrivilegesRequired {
+		v := (cvss31.u4 & 0b11000000) >> 6
+		switch v {
 		case mpr_x:
 			r = "X"
 		case mpr_n:
@@ -477,7 +404,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "H"
 		}
 	case "MUI":
-		switch cvss31.modifiedUserInteraction {
+		v := (cvss31.u4 & 0b00110000) >> 4
+		switch v {
 		case mui_x:
 			r = "X"
 		case mui_n:
@@ -486,7 +414,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "R"
 		}
 	case "MS":
-		switch cvss31.modifiedScope {
+		v := (cvss31.u4 & 0b00001100) >> 2
+		switch v {
 		case ms_x:
 			r = "X"
 		case ms_u:
@@ -495,7 +424,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "C"
 		}
 	case "MC":
-		switch cvss31.modifiedConfidentiality {
+		v := cvss31.u4 & 0b00000011
+		switch v {
 		case mcia_x:
 			r = "X"
 		case mcia_n:
@@ -506,7 +436,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "H"
 		}
 	case "MI":
-		switch cvss31.modifiedIntegrity {
+		v := (cvss31.u5 & 0b11000000) >> 6
+		switch v {
 		case mcia_x:
 			r = "X"
 		case mcia_n:
@@ -517,7 +448,8 @@ func (cvss31 CVSS31) Get(abv string) (r string, err error) {
 			r = "H"
 		}
 	case "MA":
-		switch cvss31.modifiedAvailability {
+		v := (cvss31.u5 & 0b00110000) >> 4
+		switch v {
 		case mcia_x:
 			r = "X"
 		case mcia_n:
@@ -542,49 +474,50 @@ func (cvss31 *CVSS31) Set(abv string, value string) error {
 		if err != nil {
 			return err
 		}
-		cvss31.attackVector = v
+		cvss31.u0 = (cvss31.u0 & 0b00111111) | (v << 6)
 	case "AC":
 		v, err := validate(value, []string{"L", "H"}, []uint8{ac_l, ac_h})
 		if err != nil {
 			return err
 		}
-		cvss31.attackComplexity = v
+		cvss31.u0 = (cvss31.u0 & 0b11011111) | (v << 5)
 	case "PR":
 		v, err := validate(value, []string{"N", "L", "H"}, []uint8{pr_n, pr_l, pr_h})
 		if err != nil {
 			return err
 		}
-		cvss31.privilegesRequired = v
+		cvss31.u0 = (cvss31.u0 & 0b11100111) | (v << 3)
 	case "UI":
 		v, err := validate(value, []string{"N", "R"}, []uint8{ui_n, ui_r})
 		if err != nil {
 			return err
 		}
-		cvss31.userInteraction = v
+		cvss31.u0 = (cvss31.u0 & 0b11111011) | (v << 2)
 	case "S":
 		v, err := validate(value, []string{"U", "C"}, []uint8{s_u, s_c})
 		if err != nil {
 			return err
 		}
-		cvss31.scope = v
+		cvss31.u0 = (cvss31.u0 & 0b11111101) | (v << 1)
 	case "C":
 		v, err := validate(value, []string{"H", "L", "N"}, []uint8{cia_h, cia_l, cia_n})
 		if err != nil {
 			return err
 		}
-		cvss31.confidentiality = v
+		cvss31.u0 = (cvss31.u0 & 0b11111110) | ((v & 0b10) >> 1)
+		cvss31.u1 = (cvss31.u1 & 0b01111111) | ((v & 0b01) << 7)
 	case "I":
 		v, err := validate(value, []string{"H", "L", "N"}, []uint8{cia_h, cia_l, cia_n})
 		if err != nil {
 			return err
 		}
-		cvss31.integrity = v
+		cvss31.u1 = (cvss31.u1 & 0b10011111) | (v << 5)
 	case "A":
 		v, err := validate(value, []string{"H", "L", "N"}, []uint8{cia_h, cia_l, cia_n})
 		if err != nil {
 			return err
 		}
-		cvss31.availability = v
+		cvss31.u1 = (cvss31.u1 & 0b11100111) | (v << 3)
 
 	// Temporal
 	case "E":
@@ -592,19 +525,19 @@ func (cvss31 *CVSS31) Set(abv string, value string) error {
 		if err != nil {
 			return err
 		}
-		cvss31.exploitCodeMaturity = v
+		cvss31.u1 = (cvss31.u1 & 0b11111000) | v
 	case "RL":
 		v, err := validate(value, []string{"X", "U", "W", "T", "O"}, []uint8{rl_x, rl_u, rl_w, rl_t, rl_o})
 		if err != nil {
 			return err
 		}
-		cvss31.remediationLevel = v
+		cvss31.u2 = (cvss31.u2 & 0b00011111) | (v << 5)
 	case "RC":
 		v, err := validate(value, []string{"X", "C", "R", "U"}, []uint8{rc_x, rc_c, rc_r, rc_u})
 		if err != nil {
 			return err
 		}
-		cvss31.reportConfidence = v
+		cvss31.u2 = (cvss31.u2 & 0b11100111) | (v << 3)
 
 	// Environmental
 	case "CR":
@@ -612,67 +545,68 @@ func (cvss31 *CVSS31) Set(abv string, value string) error {
 		if err != nil {
 			return err
 		}
-		cvss31.confidentialityRequirement = v
+		cvss31.u2 = (cvss31.u2 & 0b11111001) | (v << 1)
 	case "IR":
 		v, err := validate(value, []string{"X", "H", "M", "L"}, []uint8{ciar_x, ciar_h, ciar_m, ciar_l})
 		if err != nil {
 			return err
 		}
-		cvss31.integrityRequirement = v
+		cvss31.u2 = (cvss31.u2 & 0b11111110) | ((v & 0b10) >> 1)
+		cvss31.u3 = (cvss31.u3 & 0b01111111) | ((v & 0b01) << 7)
 	case "AR":
 		v, err := validate(value, []string{"X", "H", "M", "L"}, []uint8{ciar_x, ciar_h, ciar_m, ciar_l})
 		if err != nil {
 			return err
 		}
-		cvss31.availabilityRequirement = v
+		cvss31.u3 = (cvss31.u3 & 0b10011111) | (v << 5)
 	case "MAV":
 		v, err := validate(value, []string{"X", "N", "A", "L", "P"}, []uint8{mav_x, mav_n, mav_a, mav_l, mav_p})
 		if err != nil {
 			return err
 		}
-		cvss31.modifiedAttackVector = v
+		cvss31.u3 = (cvss31.u3 & 0b11100011) | (v << 2)
 	case "MAC":
 		v, err := validate(value, []string{"X", "L", "H"}, []uint8{mac_x, mac_l, mac_h})
 		if err != nil {
 			return err
 		}
-		cvss31.modifiedAttackComplexity = v
+		cvss31.u3 = (cvss31.u3 & 0b11111100) | v
 	case "MPR":
 		v, err := validate(value, []string{"X", "N", "L", "H"}, []uint8{mpr_x, mpr_n, mpr_l, mpr_h})
 		if err != nil {
 			return err
 		}
-		cvss31.modifiedPrivilegesRequired = v
+		cvss31.u4 = (cvss31.u4 & 0b00111111) | (v << 6)
 	case "MUI":
 		v, err := validate(value, []string{"X", "N", "R"}, []uint8{mui_x, mui_n, mui_r})
 		if err != nil {
 			return err
 		}
-		cvss31.modifiedUserInteraction = v
+		cvss31.u4 = (cvss31.u4 & 0b11001111) | (v << 4)
 	case "MS":
 		v, err := validate(value, []string{"X", "U", "C"}, []uint8{ms_x, ms_u, ms_c})
 		if err != nil {
 			return err
 		}
-		cvss31.modifiedScope = v
+		cvss31.u4 = (cvss31.u4 & 0b11110011) | (v << 2)
 	case "MC":
 		v, err := validate(value, []string{"X", "N", "L", "H"}, []uint8{mcia_x, mcia_n, mcia_l, mcia_h})
 		if err != nil {
 			return err
 		}
-		cvss31.modifiedConfidentiality = v
+		cvss31.u4 = (cvss31.u4 & 0b11111100) | v
 	case "MI":
 		v, err := validate(value, []string{"X", "N", "L", "H"}, []uint8{mcia_x, mcia_n, mcia_l, mcia_h})
 		if err != nil {
 			return err
 		}
-		cvss31.modifiedIntegrity = v
+		cvss31.u5 = (cvss31.u5 & 0b00111111) | (v << 6)
 	case "MA":
 		v, err := validate(value, []string{"X", "N", "L", "H"}, []uint8{mcia_x, mcia_n, mcia_l, mcia_h})
 		if err != nil {
 			return err
 		}
-		cvss31.modifiedAvailability = v
+		cvss31.u5 = (cvss31.u5 & 0b11000000) | (v << 4)
 	default:
 		return &ErrInvalidMetric{Abv: abv}
 	}
@@ -689,6 +623,12 @@ func validate(value string, enabled []string, values []uint8) (uint8, error) {
 	return 0, ErrInvalidMetricValue
 }
 
+// get is used for internal purposes only.
+func (cvss31 CVSS31) get(abv string) string {
+	str, _ := cvss31.Get(abv)
+	return str
+}
+
 // BaseScore returns the CVSS v3.1's base score.
 func (cvss31 CVSS31) BaseScore() float64 {
 	impact := cvss31.Impact()
@@ -696,27 +636,27 @@ func (cvss31 CVSS31) BaseScore() float64 {
 	if impact <= 0 {
 		return 0
 	}
-	if cvss31.scope == s_u {
+	if v, _ := cvss31.Get("S"); v == "U" {
 		return roundup(math.Min(impact+exploitability, 10))
 	}
 	return roundup(math.Min(1.08*(impact+exploitability), 10))
 }
 
 func (cvss31 CVSS31) Impact() float64 {
-	iss := 1 - ((1 - cia(cvss31.confidentiality)) * (1 - cia(cvss31.integrity)) * (1 - cia(cvss31.availability)))
-	if cvss31.scope == s_u {
+	iss := 1 - ((1 - cia(cvss31.get("C"))) * (1 - cia(cvss31.get("I"))) * (1 - cia(cvss31.get("A"))))
+	if v, _ := cvss31.Get("S"); v == "U" {
 		return 6.42 * iss
 	}
 	return 7.52*(iss-0.029) - 3.25*math.Pow(iss-0.02, 15)
 }
 
 func (cvss31 CVSS31) Exploitability() float64 {
-	return 8.22 * attackVector(cvss31.attackVector) * attackComplexity(cvss31.attackComplexity) * privilegesRequired(cvss31.privilegesRequired, cvss31.scope) * userInteraction(cvss31.userInteraction)
+	return 8.22 * attackVector(cvss31.get("AV")) * attackComplexity(cvss31.get("AC")) * privilegesRequired(cvss31.get("PR"), cvss31.get("S")) * userInteraction(cvss31.get("UI"))
 }
 
 // TemporalScore returns the CVSS v3.1's temporal score.
 func (cvss31 CVSS31) TemporalScore() float64 {
-	return roundup(cvss31.BaseScore() * exploitCodeMaturity(cvss31.exploitCodeMaturity) * remediationLevel(cvss31.remediationLevel) * reportConfidence(cvss31.reportConfidence))
+	return roundup(cvss31.BaseScore() * exploitCodeMaturity(cvss31.get("E")) * remediationLevel(cvss31.get("RL")) * reportConfidence(cvss31.get("RC")))
 }
 
 // EnvironmentalScore returns the CVSS v3.1's environmental score.
@@ -725,18 +665,18 @@ func (cvss31 CVSS31) EnvironmentalScore() float64 {
 	// It is based on first.org online calculator's source code,
 	// while it is not explicit in the specification which value
 	// to use.
-	mav := mod(cvss31.attackVector, cvss31.modifiedAttackVector, mav_x)
-	mac := mod(cvss31.attackComplexity, cvss31.modifiedAttackComplexity, mac_x)
-	mpr := mod(cvss31.privilegesRequired, cvss31.modifiedPrivilegesRequired, mpr_x)
-	mui := mod(cvss31.userInteraction, cvss31.modifiedUserInteraction, mui_x)
-	ms := mod(cvss31.scope, cvss31.modifiedScope, ms_x)
-	mc := mod(cvss31.confidentiality, cvss31.modifiedConfidentiality, mcia_x)
-	mi := mod(cvss31.integrity, cvss31.modifiedIntegrity, mcia_x)
-	ma := mod(cvss31.availability, cvss31.modifiedAvailability, mcia_x)
+	mav := mod(cvss31.get("AV"), cvss31.get("MAV"))
+	mac := mod(cvss31.get("AC"), cvss31.get("MAC"))
+	mpr := mod(cvss31.get("PR"), cvss31.get("MPR"))
+	mui := mod(cvss31.get("UI"), cvss31.get("MUI"))
+	ms := mod(cvss31.get("S"), cvss31.get("MS"))
+	mc := mod(cvss31.get("C"), cvss31.get("MC"))
+	mi := mod(cvss31.get("I"), cvss31.get("MI"))
+	ma := mod(cvss31.get("A"), cvss31.get("MA"))
 
-	miss := math.Min(1-(1-ciar(cvss31.confidentialityRequirement)*cia(mc))*(1-ciar(cvss31.integrityRequirement)*cia(mi))*(1-ciar(cvss31.availabilityRequirement)*cia(ma)), 0.915)
+	miss := math.Min(1-(1-ciar(cvss31.get("CR"))*cia(mc))*(1-ciar(cvss31.get("IR"))*cia(mi))*(1-ciar(cvss31.get("AR"))*cia(ma)), 0.915)
 	var modifiedImpact float64
-	if ms == ms_u {
+	if ms == "U" {
 		modifiedImpact = 6.42 * miss
 	} else {
 		modifiedImpact = 7.52*(miss-0.029) - 3.25*math.Pow(miss*0.9731-0.02, 13)
@@ -745,11 +685,11 @@ func (cvss31 CVSS31) EnvironmentalScore() float64 {
 	if modifiedImpact <= 0 {
 		return 0
 	}
-	if ms == ms_u {
-		return roundup(roundup(math.Min(modifiedImpact+modifiedExploitability, 10)) * exploitCodeMaturity(cvss31.exploitCodeMaturity) * remediationLevel(cvss31.remediationLevel) * reportConfidence(cvss31.reportConfidence))
+	if ms == "U" {
+		return roundup(roundup(math.Min(modifiedImpact+modifiedExploitability, 10)) * exploitCodeMaturity(cvss31.get("E")) * remediationLevel(cvss31.get("RL")) * reportConfidence(cvss31.get("RC")))
 	}
 	r := math.Min(1.08*(modifiedImpact+modifiedExploitability), 10)
-	return roundup(roundup(r) * exploitCodeMaturity(cvss31.exploitCodeMaturity) * remediationLevel(cvss31.remediationLevel) * reportConfidence(cvss31.reportConfidence))
+	return roundup(roundup(r) * exploitCodeMaturity(cvss31.get("E")) * remediationLevel(cvss31.get("RL")) * reportConfidence(cvss31.get("RC")))
 }
 
 // Rating returns the verbose for a given rating.
@@ -777,43 +717,43 @@ func Rating(score float64) (string, error) {
 
 // Helpers to compute CVSS v3.1 scores
 
-func attackVector(v uint8) float64 {
+func attackVector(v string) float64 {
 	switch v {
-	case av_n:
+	case "N":
 		return 0.85
-	case av_a:
+	case "A":
 		return 0.62
-	case av_l:
+	case "L":
 		return 0.55
-	case av_p:
+	case "P":
 		return 0.2
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func attackComplexity(v uint8) float64 {
+func attackComplexity(v string) float64 {
 	switch v {
-	case ac_l:
+	case "L":
 		return 0.77
-	case ac_h:
+	case "H":
 		return 0.44
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func privilegesRequired(v, scope uint8) float64 {
+func privilegesRequired(v, scope string) float64 {
 	switch v {
-	case pr_n:
+	case "N":
 		return 0.85
-	case pr_l:
-		if scope == s_c {
+	case "L":
+		if scope == "C" {
 			return 0.68
 		}
 		return 0.62
-	case pr_h:
-		if scope == s_c {
+	case "H":
+		if scope == "C" {
 			return 0.5
 		}
 		return 0.27
@@ -822,88 +762,88 @@ func privilegesRequired(v, scope uint8) float64 {
 	}
 }
 
-func userInteraction(v uint8) float64 {
+func userInteraction(v string) float64 {
 	switch v {
-	case ui_n:
+	case "N":
 		return 0.85
-	case ui_r:
+	case "R":
 		return 0.62
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func cia(v uint8) float64 {
+func cia(v string) float64 {
 	switch v {
-	case cia_h:
+	case "H":
 		return 0.56
-	case cia_l:
+	case "L":
 		return 0.22
-	case cia_n:
+	case "N":
 		return 0
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func exploitCodeMaturity(v uint8) float64 {
+func exploitCodeMaturity(v string) float64 {
 	switch v {
-	case e_x:
+	case "X":
 		return 1
-	case e_h:
+	case "H":
 		return 1
-	case e_f:
+	case "F":
 		return 0.97
-	case e_p:
+	case "P":
 		return 0.94
-	case e_u:
+	case "U":
 		return 0.91
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func remediationLevel(v uint8) float64 {
+func remediationLevel(v string) float64 {
 	switch v {
-	case rl_x:
+	case "X":
 		return 1
-	case rl_u:
+	case "U":
 		return 1
-	case rl_w:
+	case "W":
 		return 0.97
-	case rl_t:
+	case "T":
 		return 0.96
-	case rl_o:
+	case "O":
 		return 0.95
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func reportConfidence(v uint8) float64 {
+func reportConfidence(v string) float64 {
 	switch v {
-	case rc_x:
+	case "X":
 		return 1
-	case rc_c:
+	case "C":
 		return 1
-	case rc_r:
+	case "R":
 		return 0.96
-	case rc_u:
+	case "U":
 		return 0.92
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func ciar(v uint8) float64 {
+func ciar(v string) float64 {
 	switch v {
-	case ciar_x:
+	case "X":
 		return 1
-	case ciar_h:
+	case "H":
 		return 1.5
-	case ciar_m:
+	case "M":
 		return 1
-	case ciar_l:
+	case "L":
 		return 0.5
 	default:
 		panic(ErrInvalidMetricValue)
@@ -918,8 +858,8 @@ func roundup(x float64) float64 {
 	return (math.Floor(bx/10000) + 1) / 10.0
 }
 
-func mod(base, modified, x uint8) uint8 {
-	if modified != x {
+func mod(base, modified string) string {
+	if modified != "X" {
 		return modified
 	}
 	return base

@@ -470,50 +470,50 @@ func (cvss31 *CVSS31) Set(abv string, value string) error {
 	switch abv {
 	// Base
 	case "AV":
-		v, err := validate(value, []string{"N", "A", "L", "P"}, []uint8{av_n, av_a, av_l, av_p})
+		v, err := validate(value, []string{"N", "A", "L", "P"})
 		if err != nil {
 			return err
 		}
 		cvss31.u0 = (cvss31.u0 & 0b00111111) | (v << 6)
 	case "AC":
-		v, err := validate(value, []string{"L", "H"}, []uint8{ac_l, ac_h})
+		v, err := validate(value, []string{"L", "H"})
 		if err != nil {
 			return err
 		}
 		cvss31.u0 = (cvss31.u0 & 0b11011111) | (v << 5)
 	case "PR":
-		v, err := validate(value, []string{"N", "L", "H"}, []uint8{pr_n, pr_l, pr_h})
+		v, err := validate(value, []string{"N", "L", "H"})
 		if err != nil {
 			return err
 		}
 		cvss31.u0 = (cvss31.u0 & 0b11100111) | (v << 3)
 	case "UI":
-		v, err := validate(value, []string{"N", "R"}, []uint8{ui_n, ui_r})
+		v, err := validate(value, []string{"N", "R"})
 		if err != nil {
 			return err
 		}
 		cvss31.u0 = (cvss31.u0 & 0b11111011) | (v << 2)
 	case "S":
-		v, err := validate(value, []string{"U", "C"}, []uint8{s_u, s_c})
+		v, err := validate(value, []string{"U", "C"})
 		if err != nil {
 			return err
 		}
 		cvss31.u0 = (cvss31.u0 & 0b11111101) | (v << 1)
 	case "C":
-		v, err := validate(value, []string{"H", "L", "N"}, []uint8{cia_h, cia_l, cia_n})
+		v, err := validate(value, []string{"H", "L", "N"})
 		if err != nil {
 			return err
 		}
 		cvss31.u0 = (cvss31.u0 & 0b11111110) | ((v & 0b10) >> 1)
 		cvss31.u1 = (cvss31.u1 & 0b01111111) | ((v & 0b01) << 7)
 	case "I":
-		v, err := validate(value, []string{"H", "L", "N"}, []uint8{cia_h, cia_l, cia_n})
+		v, err := validate(value, []string{"H", "L", "N"})
 		if err != nil {
 			return err
 		}
 		cvss31.u1 = (cvss31.u1 & 0b10011111) | (v << 5)
 	case "A":
-		v, err := validate(value, []string{"H", "L", "N"}, []uint8{cia_h, cia_l, cia_n})
+		v, err := validate(value, []string{"H", "L", "N"})
 		if err != nil {
 			return err
 		}
@@ -521,19 +521,19 @@ func (cvss31 *CVSS31) Set(abv string, value string) error {
 
 	// Temporal
 	case "E":
-		v, err := validate(value, []string{"X", "H", "F", "P", "U"}, []uint8{e_x, e_h, e_f, e_p, e_u})
+		v, err := validate(value, []string{"X", "H", "F", "P", "U"})
 		if err != nil {
 			return err
 		}
 		cvss31.u1 = (cvss31.u1 & 0b11111000) | v
 	case "RL":
-		v, err := validate(value, []string{"X", "U", "W", "T", "O"}, []uint8{rl_x, rl_u, rl_w, rl_t, rl_o})
+		v, err := validate(value, []string{"X", "U", "W", "T", "O"})
 		if err != nil {
 			return err
 		}
 		cvss31.u2 = (cvss31.u2 & 0b00011111) | (v << 5)
 	case "RC":
-		v, err := validate(value, []string{"X", "C", "R", "U"}, []uint8{rc_x, rc_c, rc_r, rc_u})
+		v, err := validate(value, []string{"X", "C", "R", "U"})
 		if err != nil {
 			return err
 		}
@@ -541,68 +541,68 @@ func (cvss31 *CVSS31) Set(abv string, value string) error {
 
 	// Environmental
 	case "CR":
-		v, err := validate(value, []string{"X", "H", "M", "L"}, []uint8{ciar_x, ciar_h, ciar_m, ciar_l})
+		v, err := validate(value, []string{"X", "H", "M", "L"})
 		if err != nil {
 			return err
 		}
 		cvss31.u2 = (cvss31.u2 & 0b11111001) | (v << 1)
 	case "IR":
-		v, err := validate(value, []string{"X", "H", "M", "L"}, []uint8{ciar_x, ciar_h, ciar_m, ciar_l})
+		v, err := validate(value, []string{"X", "H", "M", "L"})
 		if err != nil {
 			return err
 		}
 		cvss31.u2 = (cvss31.u2 & 0b11111110) | ((v & 0b10) >> 1)
 		cvss31.u3 = (cvss31.u3 & 0b01111111) | ((v & 0b01) << 7)
 	case "AR":
-		v, err := validate(value, []string{"X", "H", "M", "L"}, []uint8{ciar_x, ciar_h, ciar_m, ciar_l})
+		v, err := validate(value, []string{"X", "H", "M", "L"})
 		if err != nil {
 			return err
 		}
 		cvss31.u3 = (cvss31.u3 & 0b10011111) | (v << 5)
 	case "MAV":
-		v, err := validate(value, []string{"X", "N", "A", "L", "P"}, []uint8{mav_x, mav_n, mav_a, mav_l, mav_p})
+		v, err := validate(value, []string{"X", "N", "A", "L", "P"})
 		if err != nil {
 			return err
 		}
 		cvss31.u3 = (cvss31.u3 & 0b11100011) | (v << 2)
 	case "MAC":
-		v, err := validate(value, []string{"X", "L", "H"}, []uint8{mac_x, mac_l, mac_h})
+		v, err := validate(value, []string{"X", "L", "H"})
 		if err != nil {
 			return err
 		}
 		cvss31.u3 = (cvss31.u3 & 0b11111100) | v
 	case "MPR":
-		v, err := validate(value, []string{"X", "N", "L", "H"}, []uint8{mpr_x, mpr_n, mpr_l, mpr_h})
+		v, err := validate(value, []string{"X", "N", "L", "H"})
 		if err != nil {
 			return err
 		}
 		cvss31.u4 = (cvss31.u4 & 0b00111111) | (v << 6)
 	case "MUI":
-		v, err := validate(value, []string{"X", "N", "R"}, []uint8{mui_x, mui_n, mui_r})
+		v, err := validate(value, []string{"X", "N", "R"})
 		if err != nil {
 			return err
 		}
 		cvss31.u4 = (cvss31.u4 & 0b11001111) | (v << 4)
 	case "MS":
-		v, err := validate(value, []string{"X", "U", "C"}, []uint8{ms_x, ms_u, ms_c})
+		v, err := validate(value, []string{"X", "U", "C"})
 		if err != nil {
 			return err
 		}
 		cvss31.u4 = (cvss31.u4 & 0b11110011) | (v << 2)
 	case "MC":
-		v, err := validate(value, []string{"X", "N", "L", "H"}, []uint8{mcia_x, mcia_n, mcia_l, mcia_h})
+		v, err := validate(value, []string{"X", "N", "L", "H"})
 		if err != nil {
 			return err
 		}
 		cvss31.u4 = (cvss31.u4 & 0b11111100) | v
 	case "MI":
-		v, err := validate(value, []string{"X", "N", "L", "H"}, []uint8{mcia_x, mcia_n, mcia_l, mcia_h})
+		v, err := validate(value, []string{"X", "N", "L", "H"})
 		if err != nil {
 			return err
 		}
 		cvss31.u5 = (cvss31.u5 & 0b00111111) | (v << 6)
 	case "MA":
-		v, err := validate(value, []string{"X", "N", "L", "H"}, []uint8{mcia_x, mcia_n, mcia_l, mcia_h})
+		v, err := validate(value, []string{"X", "N", "L", "H"})
 		if err != nil {
 			return err
 		}
@@ -613,12 +613,15 @@ func (cvss31 *CVSS31) Set(abv string, value string) error {
 	return nil
 }
 
-func validate(value string, enabled []string, values []uint8) (uint8, error) {
+// validate returns the index of value in enabled if matches.
+// enabled values have to match the values.go constants order.
+func validate(value string, enabled []string) (i uint8, err error) {
 	// Check is valid
-	for i, enbl := range enabled {
+	for _, enbl := range enabled {
 		if value == enbl {
-			return values[i], nil
+			return i, nil
 		}
+		i++
 	}
 	return 0, ErrInvalidMetricValue
 }

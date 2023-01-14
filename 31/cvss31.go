@@ -590,19 +590,19 @@ func (cvss31 *CVSS31) Set(abv string, value string) error {
 		}
 		cvss31.u4 = (cvss31.u4 & 0b11110011) | (v << 2)
 	case "MC":
-		v, err := validate(value, []string{"X", "N", "L", "H"})
+		v, err := validate(value, []string{"X", "H", "L", "N"})
 		if err != nil {
 			return err
 		}
 		cvss31.u4 = (cvss31.u4 & 0b11111100) | v
 	case "MI":
-		v, err := validate(value, []string{"X", "N", "L", "H"})
+		v, err := validate(value, []string{"X", "H", "L", "N"})
 		if err != nil {
 			return err
 		}
 		cvss31.u5 = (cvss31.u5 & 0b00111111) | (v << 6)
 	case "MA":
-		v, err := validate(value, []string{"X", "N", "L", "H"})
+		v, err := validate(value, []string{"X", "H", "L", "N"})
 		if err != nil {
 			return err
 		}

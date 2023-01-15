@@ -26,6 +26,7 @@ It won't support CVSS v1.0, as despite it was a good CVSS start, it can't get ve
    - [CVSS v3.0](#cvss-v30)
    - [CVSS v3.1](#cvss-v31)
    - [How it works](#how-it-works)
+   - [Comparison](#comparison)
  - [Feedbacks](#feedbacks)
    - [CVSS v2.0](#cvss-v20-1)
    - [CVSS v3.0](#cvss-v30-1)
@@ -152,6 +153,24 @@ Then, the only issue arises with implementing this idea. We define a scheme to s
 We are aware that this could still be improved as we could transitively state that CVSS vectors are a set of finite combinations, so we could enumerate them. This would lead us to a finite set of `573308928000` combinations for v3 and `139968000` for v2, which could be respectively represented on `40` bits (`=log2(573308928000)`) that makes `5` bytes and `28` bits (`=log2(139968000)`) that still makes `4`.
 This imply that CVSS v2 implementation can't be improved by this process.
 Nevertheless, this has been judged over-optimizations for now, but a motivated developer may do it for a cookie :laughing:
+
+### Comparison
+
+The following are the results of the comparison with others Go CVSS implementations, based on its own [benchmarking suite](./benchmarks).
+
+Benchmarks results for CVSS v2.
+<div align="center">
+	<img src="res/benchmarks-results-cvss-v2.png">
+</div>
+
+Benchmarks results for CVSS v3.
+<div align="center">
+	<img src="res/benchmarks-results-cvss-v3.png">
+</div>
+
+Based on those results, we can see that this implementation does not scores best for each metric, but the overall shows **it is better than others at parsing and vectorizing**. As those are the core of this Go module API, with support and compliance of both v2 and v3, we consider our Go module better to use.
+
+The _poor_ results of `BaseScore` is due to the internal optimizations that takes more cycles to fetch the values, but the time efficiency is still gigantic (between 10 and 30 ns/op in our experiment).
 
 ## Feedbacks
 

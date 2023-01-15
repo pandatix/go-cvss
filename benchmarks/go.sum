@@ -1,0 +1,12 @@
+github.com/bunji2/cvssv3 v0.0.0-20191208005905-79ce3fdeaf96 h1:H87PbXh9xs9goFyQBSdBWdCnKAJtIanhyO93Rg0sA00=
+github.com/bunji2/cvssv3 v0.0.0-20191208005905-79ce3fdeaf96/go.mod h1:aBmaBjhsf8dqeCbjD4XG8NUfjU4qwdsd7SvFJDCaKv8=
+github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
+github.com/goark/errs v1.1.0 h1:FKnyw4LVyRADIjM8Nj0Up6r0/y5cfADvZAd1E+tthXE=
+github.com/goark/errs v1.1.0/go.mod h1:TtaPEoadm2mzqzfXdkkfpN2xuniCFm2q4JH+c1qzaqw=
+github.com/goark/go-cvss v1.3.0 h1:MItNedK1j4B6r+HV5pwYFBA44rD0c1yfQCNqiHJ3tJE=
+github.com/goark/go-cvss v1.3.0/go.mod h1:IQIHDqVqfWJ4O+cOp3BknQCBI3i1lOuPtWBR17aOcqM=
+github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
+github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
+github.com/umisama/go-cvss v0.0.0-20150430082624-a4ad666ead9b h1:ClNec08A0oNy2GdLQo2FVifk5/m8EMRt7phHCVEkw6o=
+github.com/umisama/go-cvss v0.0.0-20150430082624-a4ad666ead9b/go.mod h1:MLOxNRiXH/it64M5NMUR8EQH4JCRL+s2OlSr/Rw88Jc=
+gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=

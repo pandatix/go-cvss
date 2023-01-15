@@ -20,19 +20,10 @@ func ParseVector(vector string) (*CVSS20, error) {
 
 	// Work on each CVSS part
 	cvss20 := &CVSS20{
-		base: base{},
-		temporal: temporal{
-			exploitability:   "ND",
-			remediationLevel: "ND",
-			reportConfidence: "ND",
-		},
-		environmental: environmental{
-			collateralDamagePotential:  "ND",
-			targetDistribution:         "ND",
-			confidentialityRequirement: "ND",
-			integrityRequirement:       "ND",
-			availabilityRequirement:    "ND",
-		},
+		u0: 0,
+		u1: 0,
+		u2: 0,
+		u3: 0,
 	}
 
 	slci := 0
@@ -111,27 +102,29 @@ func (cvss20 CVSS20) Vector() string {
 	b := make([]byte, 0, l)
 
 	// Base
-	app(&b, "AV:", cvss20.accessVector)
-	app(&b, "/AC:", cvss20.accessComplexity)
-	app(&b, "/Au:", cvss20.authentication)
-	app(&b, "/C:", cvss20.confidentialityImpact)
-	app(&b, "/I:", cvss20.integrityImpact)
-	app(&b, "/A:", cvss20.availabilityImpact)
+	app(&b, "AV:", cvss20.get("AV"))
+	app(&b, "/AC:", cvss20.get("AC"))
+	app(&b, "/Au:", cvss20.get("Au"))
+	app(&b, "/C:", cvss20.get("C"))
+	app(&b, "/I:", cvss20.get("I"))
+	app(&b, "/A:", cvss20.get("A"))
 
 	// Temporal
-	if cvss20.exploitability != "ND" || cvss20.remediationLevel != "ND" || cvss20.reportConfidence != "ND" {
-		app(&b, "/E:", cvss20.exploitability)
-		app(&b, "/RL:", cvss20.remediationLevel)
-		app(&b, "/RC:", cvss20.reportConfidence)
+	e, rl, rc := cvss20.get("E"), cvss20.get("RL"), cvss20.get("RC")
+	if e != "ND" || rl != "ND" || rc != "ND" {
+		app(&b, "/E:", e)
+		app(&b, "/RL:", rl)
+		app(&b, "/RC:", rc)
 	}
 
 	// Environmental
-	if cvss20.collateralDamagePotential != "ND" || cvss20.targetDistribution != "ND" || cvss20.confidentialityRequirement != "ND" || cvss20.integrityRequirement != "ND" || cvss20.availabilityRequirement != "ND" {
-		app(&b, "/CDP:", cvss20.collateralDamagePotential)
-		app(&b, "/TD:", cvss20.targetDistribution)
-		app(&b, "/CR:", cvss20.confidentialityRequirement)
-		app(&b, "/IR:", cvss20.integrityRequirement)
-		app(&b, "/AR:", cvss20.availabilityRequirement)
+	cdp, td, cr, ir, ar := cvss20.get("CDP"), cvss20.get("TD"), cvss20.get("CR"), cvss20.get("IR"), cvss20.get("AR")
+	if cdp != "ND" || td != "ND" || cr != "ND" || ir != "ND" || ar != "ND" {
+		app(&b, "/CDP:", cdp)
+		app(&b, "/TD:", td)
+		app(&b, "/CR:", cr)
+		app(&b, "/IR:", ir)
+		app(&b, "/AR:", ar)
 	}
 
 	return *(*string)(unsafe.Pointer(&b))
@@ -142,7 +135,7 @@ func lenVec(cvss20 *CVSS20) int {
 	// - AV, AC, Au: 4
 	// - C, I, A: 3
 	// - separators: 5
-	// Total: 3*4 + 3*3 + 5 = 30
+	// Total: 3*4 + 3*3 + 5 = 26
 	l := 26
 
 	// Temporal:
@@ -151,8 +144,9 @@ func lenVec(cvss20 *CVSS20) int {
 	// - RC: 3 + len(v)
 	// - separators: 3
 	// Total: 11 + 3*len(v)
-	if cvss20.exploitability != "ND" || cvss20.remediationLevel != "ND" || cvss20.reportConfidence != "ND" {
-		l += 11 + len(cvss20.exploitability) + len(cvss20.remediationLevel) + len(cvss20.reportConfidence)
+	e, rl, rc := cvss20.get("E"), cvss20.get("RL"), cvss20.get("RC")
+	if e != "ND" || rl != "ND" || rc != "ND" {
+		l += 11 + len(e) + len(rl) + len(rc)
 	}
 
 	// Environmental:
@@ -161,8 +155,9 @@ func lenVec(cvss20 *CVSS20) int {
 	// - CR, IR, AR: 3 + len(v)
 	// - separators: 5
 	// Total: 21 + 5*len(v)
-	if cvss20.collateralDamagePotential != "ND" || cvss20.targetDistribution != "ND" || cvss20.confidentialityRequirement != "ND" || cvss20.integrityRequirement != "ND" || cvss20.availabilityRequirement != "ND" {
-		l += 21 + len(cvss20.collateralDamagePotential) + len(cvss20.targetDistribution) + len(cvss20.confidentialityRequirement) + len(cvss20.integrityRequirement) + len(cvss20.availabilityRequirement)
+	cdp, td, cr, ir, ar := cvss20.get("CDP"), cvss20.get("TD"), cvss20.get("CR"), cvss20.get("IR"), cvss20.get("AR")
+	if cdp != "ND" || td != "ND" || cr != "ND" || ir != "ND" || ar != "ND" {
+		l += 21 + len(cdp) + len(td) + len(cr) + len(ir) + len(ar)
 	}
 
 	return l
@@ -175,182 +170,308 @@ func app(b *[]byte, pre, v string) {
 
 // CVSS20 embeds all the metric values defined by the CVSS v2.0
 // rev2 specification.
-// Attributes values must not be manipulated directly. Use Get
-// and Set methods.
 type CVSS20 struct {
-	base
-	temporal
-	environmental
+	u0, u1, u2, u3 uint8
 }
 
-// base is the group of metrics defined with such name by the
-// first.org CVSS v2.0 rev2 specification.
-// Mandatory.
-type base struct {
-	// AV -> [L,A,N]
-	accessVector string
-	// AC -> [H,M,L]
-	accessComplexity string
-	// Au -> [M,S,N]
-	authentication string
-	// C -> [N,P,C]
-	confidentialityImpact string
-	// I -> [N,P,C]
-	integrityImpact string
-	// A -> [N,P,C]
-	availabilityImpact string
-}
-
-// temporal is the group of metrics defined with such name by the
-// first.org CVSS v2.0 rev2 specification.
-// Not mandatory.
-type temporal struct {
-	// E -> [U,POC,F,F,H,ND]
-	exploitability string
-	// RL -> [OF,TF,W,U,ND]
-	remediationLevel string
-	// RC -> [UC,UR,C,ND]
-	reportConfidence string
-}
-
-// environmental is the group of metrics defined with such name by the
-// first.org CVSS v2.0 rev2 specification.
-// Not mandatory.
-type environmental struct {
-	// CDP -> [N,L,LM,MH,H,ND]
-	collateralDamagePotential string
-	// TD -> [N,L,M,H,ND]
-	targetDistribution string
-	// CR,IR,AR -> [L,M,H,ND]
-	confidentialityRequirement string
-	integrityRequirement       string
-	availabilityRequirement    string
-}
-
-func (cvss20 CVSS20) Get(abv string) (string, error) {
+func (cvss20 CVSS20) Get(abv string) (r string, err error) {
 	switch abv {
+	// Base
 	case "AV":
-		return cvss20.accessVector, nil
+		v := (cvss20.u0 & 0b11000000) >> 6
+		switch v {
+		case av_l:
+			r = "L"
+		case av_a:
+			r = "A"
+		case av_n:
+			r = "N"
+		}
 	case "AC":
-		return cvss20.accessComplexity, nil
+		v := (cvss20.u0 & 0b00110000) >> 4
+		switch v {
+		case ac_l:
+			r = "L"
+		case ac_m:
+			r = "M"
+		case ac_h:
+			r = "H"
+		}
 	case "Au":
-		return cvss20.authentication, nil
+		v := (cvss20.u0 & 0b00001100) >> 2
+		switch v {
+		case au_m:
+			r = "M"
+		case au_s:
+			r = "S"
+		case au_n:
+			r = "N"
+		}
 	case "C":
-		return cvss20.confidentialityImpact, nil
+		v := cvss20.u0 & 0b00000011
+		switch v {
+		case cia_n:
+			r = "N"
+		case cia_p:
+			r = "P"
+		case cia_c:
+			r = "C"
+		}
 	case "I":
-		return cvss20.integrityImpact, nil
+		v := (cvss20.u1 & 0b11000000) >> 6
+		switch v {
+		case cia_n:
+			r = "N"
+		case cia_p:
+			r = "P"
+		case cia_c:
+			r = "C"
+		}
 	case "A":
-		return cvss20.availabilityImpact, nil
+		v := (cvss20.u1 & 0b00110000) >> 4
+		switch v {
+		case cia_n:
+			r = "N"
+		case cia_p:
+			r = "P"
+		case cia_c:
+			r = "C"
+		}
+
+	// Temporal
 	case "E":
-		return cvss20.exploitability, nil
+		v := (cvss20.u1 & 0b00001110) >> 1
+		switch v {
+		case e_nd:
+			r = "ND"
+		case e_u:
+			r = "U"
+		case e_poc:
+			r = "POC"
+		case e_f:
+			r = "F"
+		case e_h:
+			r = "H"
+		}
 	case "RL":
-		return cvss20.remediationLevel, nil
+		v := ((cvss20.u1 & 0b00000001) << 2) | ((cvss20.u2 & 0b11000000) >> 6)
+		switch v {
+		case rl_nd:
+			r = "ND"
+		case rl_of:
+			r = "OF"
+		case rl_tf:
+			r = "TF"
+		case rl_w:
+			r = "W"
+		case rl_u:
+			r = "U"
+		}
 	case "RC":
-		return cvss20.reportConfidence, nil
+		v := (cvss20.u2 & 0b00110000) >> 4
+		switch v {
+		case rc_nd:
+			r = "ND"
+		case rc_uc:
+			r = "UC"
+		case rc_ur:
+			r = "UR"
+		case rc_c:
+			r = "C"
+		}
+
+	// Environmental
 	case "CDP":
-		return cvss20.collateralDamagePotential, nil
+		v := (cvss20.u2 & 0b00001110) >> 1
+		switch v {
+		case cdp_nd:
+			r = "ND"
+		case cdp_n:
+			r = "N"
+		case cdp_l:
+			r = "L"
+		case cdp_lm:
+			r = "LM"
+		case cdp_mh:
+			r = "MH"
+		case cdp_h:
+			r = "H"
+		}
 	case "TD":
-		return cvss20.targetDistribution, nil
+		v := ((cvss20.u2 & 0b00000001) << 2) | ((cvss20.u3 & 0b11000000) >> 6)
+		switch v {
+		case td_nd:
+			r = "ND"
+		case td_n:
+			r = "N"
+		case td_l:
+			r = "L"
+		case td_m:
+			r = "M"
+		case td_h:
+			r = "H"
+		}
 	case "CR":
-		return cvss20.confidentialityRequirement, nil
+		v := (cvss20.u3 & 0b00110000) >> 4
+		switch v {
+		case ciar_nd:
+			r = "ND"
+		case ciar_l:
+			r = "L"
+		case ciar_m:
+			r = "M"
+		case ciar_h:
+			r = "H"
+		}
 	case "IR":
-		return cvss20.integrityRequirement, nil
+		v := (cvss20.u3 & 0b00001100) >> 2
+		switch v {
+		case ciar_nd:
+			r = "ND"
+		case ciar_l:
+			r = "L"
+		case ciar_m:
+			r = "M"
+		case ciar_h:
+			r = "H"
+		}
 	case "AR":
-		return cvss20.availabilityRequirement, nil
+		v := cvss20.u3 & 0b00000011
+		switch v {
+		case ciar_nd:
+			r = "ND"
+		case ciar_l:
+			r = "L"
+		case ciar_m:
+			r = "M"
+		case ciar_h:
+			r = "H"
+		}
 	default:
 		return "", &ErrInvalidMetric{Abv: abv}
 	}
+	return
+}
+
+// get is used for internal purposes only.
+func (cvss20 CVSS20) get(abv string) string {
+	str, err := cvss20.Get(abv)
+	if err != nil {
+		panic(err)
+	}
+	return str
 }
 
 func (cvss20 *CVSS20) Set(abv string, value string) error {
 	switch abv {
 	// Base
 	case "AV":
-		if err := validate(value, []string{"L", "A", "N"}); err != nil {
+		v, err := validate(value, []string{"L", "A", "N"})
+		if err != nil {
 			return err
 		}
-		cvss20.accessVector = value
+		cvss20.u0 = (cvss20.u0 & 0b00111111) | (v << 6)
 	case "AC":
-		if err := validate(value, []string{"H", "M", "L"}); err != nil {
+		v, err := validate(value, []string{"L", "M", "H"})
+		if err != nil {
 			return err
 		}
-		cvss20.accessComplexity = value
+		cvss20.u0 = (cvss20.u0 & 0b11001111) | (v << 4)
 	case "Au":
-		if err := validate(value, []string{"M", "S", "N"}); err != nil {
+		v, err := validate(value, []string{"M", "S", "N"})
+		if err != nil {
 			return err
 		}
-		cvss20.authentication = value
+		cvss20.u0 = (cvss20.u0 & 0b11110011) | (v << 2)
 	case "C":
-		if err := validate(value, []string{"N", "P", "C"}); err != nil {
+		v, err := validate(value, []string{"N", "P", "C"})
+		if err != nil {
 			return err
 		}
-		cvss20.confidentialityImpact = value
+		cvss20.u0 = (cvss20.u0 & 0b11111100) | v
 	case "I":
-		if err := validate(value, []string{"N", "P", "C"}); err != nil {
+		v, err := validate(value, []string{"N", "P", "C"})
+		if err != nil {
 			return err
 		}
-		cvss20.integrityImpact = value
+		cvss20.u1 = (cvss20.u1 & 0b00111111) | (v << 6)
 	case "A":
-		if err := validate(value, []string{"N", "P", "C"}); err != nil {
+		v, err := validate(value, []string{"N", "P", "C"})
+		if err != nil {
 			return err
 		}
-		cvss20.availabilityImpact = value
+		cvss20.u1 = (cvss20.u1 & 0b11001111) | (v << 4)
+
 	// Temporal
 	case "E":
-		if err := validate(value, []string{"U", "POC", "F", "H", "ND"}); err != nil {
+		v, err := validate(value, []string{"ND", "U", "POC", "F", "H"})
+		if err != nil {
 			return err
 		}
-		cvss20.exploitability = value
+		cvss20.u1 = (cvss20.u1 & 0b11110001) | (v << 1)
 	case "RL":
-		if err := validate(value, []string{"OF", "TF", "W", "U", "ND"}); err != nil {
+		v, err := validate(value, []string{"ND", "OF", "TF", "W", "U"})
+		if err != nil {
 			return err
 		}
-		cvss20.remediationLevel = value
+		cvss20.u1 = (cvss20.u1 & 0b11111110) | ((v & 0b100) >> 2)
+		cvss20.u2 = (cvss20.u2 & 0b00111111) | ((v & 0b011) << 6)
 	case "RC":
-		if err := validate(value, []string{"UC", "UR", "C", "ND"}); err != nil {
+		v, err := validate(value, []string{"ND", "UC", "UR", "C"})
+		if err != nil {
 			return err
 		}
-		cvss20.reportConfidence = value
+		cvss20.u2 = (cvss20.u2 & 0b11001111) | (v << 4)
+
 	// Environmental
 	case "CDP":
-		if err := validate(value, []string{"N", "L", "LM", "MH", "H", "ND"}); err != nil {
+		v, err := validate(value, []string{"ND", "N", "L", "LM", "MH", "H"})
+		if err != nil {
 			return err
 		}
-		cvss20.collateralDamagePotential = value
+		cvss20.u2 = (cvss20.u2 & 0b11110001) | (v << 1)
 	case "TD":
-		if err := validate(value, []string{"N", "L", "M", "H", "ND"}); err != nil {
+		v, err := validate(value, []string{"ND", "N", "L", "M", "H"})
+		if err != nil {
 			return err
 		}
-		cvss20.targetDistribution = value
+		cvss20.u2 = (cvss20.u2 & 0b11111110) | ((v & 0b100) >> 2)
+		cvss20.u3 = (cvss20.u3 & 0b00111111) | ((v & 0b011) << 6)
 	case "CR":
-		if err := validate(value, []string{"L", "M", "H", "ND"}); err != nil {
+		v, err := validate(value, []string{"ND", "L", "M", "H"})
+		if err != nil {
 			return err
 		}
-		cvss20.confidentialityRequirement = value
+		cvss20.u3 = (cvss20.u3 & 0b11001111) | (v << 4)
 	case "IR":
-		if err := validate(value, []string{"L", "M", "H", "ND"}); err != nil {
+		v, err := validate(value, []string{"ND", "L", "M", "H"})
+		if err != nil {
 			return err
 		}
-		cvss20.integrityRequirement = value
+		cvss20.u3 = (cvss20.u3 & 0b11110011) | (v << 2)
 	case "AR":
-		if err := validate(value, []string{"L", "M", "H", "ND"}); err != nil {
+		v, err := validate(value, []string{"ND", "L", "M", "H"})
+		if err != nil {
 			return err
 		}
-		cvss20.availabilityRequirement = value
+		cvss20.u3 = (cvss20.u3 & 0b11111100) | v
 	default:
 		return &ErrInvalidMetric{Abv: abv}
 	}
 	return nil
 }
 
-func validate(value string, enabled []string) error {
+// validate returns the index of value in enabled if matches.
+// enabled values have to match the values.go constants order.
+func validate(value string, enabled []string) (i uint8, err error) {
 	// Check is valid
 	for _, enbl := range enabled {
 		if value == enbl {
-			return nil
+			return i, nil
 		}
+		i++
 	}
-	return ErrInvalidMetricValue
+	return 0, ErrInvalidMetricValue
 }
 
 // BaseScore returns the CVSS v2.0's base score.
@@ -365,30 +486,30 @@ func (cvss20 CVSS20) BaseScore() float64 {
 }
 
 func (cvss20 CVSS20) Impact() float64 {
-	return 10.41 * (1 - (1-cia(cvss20.confidentialityImpact))*(1-cia(cvss20.integrityImpact))*(1-cia(cvss20.availabilityImpact)))
+	return 10.41 * (1 - (1-cia(cvss20.get("C")))*(1-cia(cvss20.get("I")))*(1-cia(cvss20.get("A"))))
 }
 
 func (cvss20 CVSS20) Exploitability() float64 {
-	return 20 * accessVector(cvss20.accessVector) * accessComplexity(cvss20.accessComplexity) * authentication(cvss20.authentication)
+	return 20 * accessVector(cvss20.get("AV")) * accessComplexity(cvss20.get("AC")) * authentication(cvss20.get("Au"))
 }
 
 // TemporalScore returns the CVSS v2.0's temporal score.
 func (cvss20 CVSS20) TemporalScore() float64 {
-	return roundTo1Decimal(cvss20.BaseScore() * exploitability(cvss20.exploitability) * remediationLevel(cvss20.remediationLevel) * reportConfidence(cvss20.reportConfidence))
+	return roundTo1Decimal(cvss20.BaseScore() * exploitability(cvss20.get("E")) * remediationLevel(cvss20.get("RL")) * reportConfidence(cvss20.get("RC")))
 }
 
 // EnvironmentalScore returns the CVSS v2.0's environmental score.
 func (cvss20 CVSS20) EnvironmentalScore() float64 {
 	// Recompute base score
-	adjustedImpact := math.Min(10, 10.41*(1-(1-cia(cvss20.confidentialityImpact)*ciar(cvss20.confidentialityRequirement))*(1-cia(cvss20.integrityImpact)*ciar(cvss20.integrityRequirement))*(1-cia(cvss20.availabilityImpact)*ciar(cvss20.availabilityRequirement))))
+	adjustedImpact := math.Min(10, 10.41*(1-(1-cia(cvss20.get("C"))*ciar(cvss20.get("CR")))*(1-cia(cvss20.get("I"))*ciar(cvss20.get("IR")))*(1-cia(cvss20.get("A"))*ciar(cvss20.get("AR")))))
 	fimpactBase := 0.0
 	if adjustedImpact != 0 {
 		fimpactBase = 1.176
 	}
-	expltBase := 20 * accessVector(cvss20.accessVector) * accessComplexity(cvss20.accessComplexity) * authentication(cvss20.authentication)
+	expltBase := 20 * accessVector(cvss20.get("AV")) * accessComplexity(cvss20.get("AC")) * authentication(cvss20.get("Au"))
 	recBase := roundTo1Decimal(((0.6 * adjustedImpact) + (0.4 * expltBase) - 1.5) * fimpactBase)
-	adjustedTemporal := roundTo1Decimal(recBase * exploitability(cvss20.exploitability) * remediationLevel(cvss20.remediationLevel) * reportConfidence(cvss20.reportConfidence))
-	return roundTo1Decimal((adjustedTemporal + (10-adjustedTemporal)*collateralDamagePotential(cvss20.collateralDamagePotential)) * targetDistribution(cvss20.targetDistribution))
+	adjustedTemporal := roundTo1Decimal(recBase * exploitability(cvss20.get("E")) * remediationLevel(cvss20.get("RL")) * reportConfidence(cvss20.get("RC")))
+	return roundTo1Decimal((adjustedTemporal + (10-adjustedTemporal)*collateralDamagePotential(cvss20.get("CDP"))) * targetDistribution(cvss20.get("TD")))
 }
 
 // Helpers to compute CVSS v2.0 scores.

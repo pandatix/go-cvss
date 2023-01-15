@@ -14,104 +14,40 @@ var testsParseVector = map[string]struct {
 	"CVSS v2.0 Guide Section 3.3.1 CVE-2002-0392": {
 		Vector: "AV:N/AC:L/Au:N/C:N/I:N/A:C/E:F/RL:OF/RC:C",
 		ExpectedCVSS20: &CVSS20{
-			base: base{
-				accessVector:          "N",
-				accessComplexity:      "L",
-				authentication:        "N",
-				confidentialityImpact: "N",
-				integrityImpact:       "N",
-				availabilityImpact:    "C",
-			},
-			temporal: temporal{
-				exploitability:   "F",
-				remediationLevel: "OF",
-				reportConfidence: "C",
-			},
-			environmental: environmental{
-				collateralDamagePotential:  "ND",
-				targetDistribution:         "ND",
-				confidentialityRequirement: "ND",
-				integrityRequirement:       "ND",
-				availabilityRequirement:    "ND",
-			},
+			u0: 0b10001000,
+			u1: 0b00100110,
+			u2: 0b01110000,
+			u3: 0b00000000,
 		},
 		ExpectedErr: nil,
 	},
 	"CVSS v2.0 Guide Section 3.3.2 CVE-2003-0818": {
 		Vector: "AV:N/AC:L/Au:N/C:C/I:C/A:C/E:F/RL:OF/RC:C",
 		ExpectedCVSS20: &CVSS20{
-			base: base{
-				accessVector:          "N",
-				accessComplexity:      "L",
-				authentication:        "N",
-				confidentialityImpact: "C",
-				integrityImpact:       "C",
-				availabilityImpact:    "C",
-			},
-			temporal: temporal{
-				exploitability:   "F",
-				remediationLevel: "OF",
-				reportConfidence: "C",
-			},
-			environmental: environmental{
-				collateralDamagePotential:  "ND",
-				targetDistribution:         "ND",
-				confidentialityRequirement: "ND",
-				integrityRequirement:       "ND",
-				availabilityRequirement:    "ND",
-			},
+			u0: 0b10001010,
+			u1: 0b10100110,
+			u2: 0b01110000,
+			u3: 0b00000000,
 		},
 		ExpectedErr: nil,
 	},
 	"CVSS v2.0 Guide Section 3.3.3 CVE-2003-0062": {
 		Vector: "AV:L/AC:H/Au:N/C:C/I:C/A:C/E:POC/RL:OF/RC:C",
 		ExpectedCVSS20: &CVSS20{
-			base: base{
-				accessVector:          "L",
-				accessComplexity:      "H",
-				authentication:        "N",
-				confidentialityImpact: "C",
-				integrityImpact:       "C",
-				availabilityImpact:    "C",
-			},
-			temporal: temporal{
-				exploitability:   "POC",
-				remediationLevel: "OF",
-				reportConfidence: "C",
-			},
-			environmental: environmental{
-				collateralDamagePotential:  "ND",
-				targetDistribution:         "ND",
-				confidentialityRequirement: "ND",
-				integrityRequirement:       "ND",
-				availabilityRequirement:    "ND",
-			},
+			u0: 0b00101010,
+			u1: 0b10100100,
+			u2: 0b01110000,
+			u3: 0b00000000,
 		},
 		ExpectedErr: nil,
 	},
 	"all-defined": {
 		Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:C/E:U/RL:OF/RC:C/CDP:MH/TD:H/CR:M/IR:M/AR:M",
 		ExpectedCVSS20: &CVSS20{
-			base: base{
-				accessVector:          "N",
-				accessComplexity:      "L",
-				authentication:        "N",
-				confidentialityImpact: "P",
-				integrityImpact:       "P",
-				availabilityImpact:    "C",
-			},
-			temporal: temporal{
-				exploitability:   "U",
-				remediationLevel: "OF",
-				reportConfidence: "C",
-			},
-			environmental: environmental{
-				collateralDamagePotential:  "MH",
-				targetDistribution:         "H",
-				confidentialityRequirement: "M",
-				integrityRequirement:       "M",
-				availabilityRequirement:    "M",
-			},
+			u0: 0b10001001,
+			u1: 0b01100010,
+			u2: 0b01111001,
+			u3: 0b00101010,
 		},
 		ExpectedErr: nil,
 	},
@@ -120,26 +56,10 @@ var testsParseVector = map[string]struct {
 		// not defined. This case can be found in the wild (e.g. NIST).
 		Vector: "AV:L/AC:M/Au:S/C:N/I:N/A:P/CDP:N/TD:ND/CR:M/IR:ND/AR:ND",
 		ExpectedCVSS20: &CVSS20{
-			base: base{
-				accessVector:          "L",
-				accessComplexity:      "M",
-				authentication:        "S",
-				confidentialityImpact: "N",
-				integrityImpact:       "N",
-				availabilityImpact:    "P",
-			},
-			temporal: temporal{
-				exploitability:   "ND",
-				remediationLevel: "ND",
-				reportConfidence: "ND",
-			},
-			environmental: environmental{
-				collateralDamagePotential:  "N",
-				targetDistribution:         "ND",
-				confidentialityRequirement: "M",
-				integrityRequirement:       "ND",
-				availabilityRequirement:    "ND",
-			},
+			u0: 0b00010100,
+			u1: 0b00010000,
+			u2: 0b00000010,
+			u3: 0b00100000,
 		},
 		ExpectedErr: nil,
 	},
@@ -148,7 +68,7 @@ var testsParseVector = map[string]struct {
 		// with not any temporal metric defined but some environmental ones
 		// does not export the same string as when parsed.
 		// It raises the following question: "does the whole metric group must
-		// me completly specified in order to the vector to be valid ?". This
+		// be completly specified in order for the vector to be valid ?". This
 		// does not find an answer in the first.org's specification document,
 		// but given the fact that the NVD CVSS v2.0 calculator emits a metric
 		// group as soon as one of it's metrics is different from "ND", this
@@ -162,26 +82,10 @@ var testsParseVector = map[string]struct {
 		// This test case proves the possibility of previous fuzz crasher.
 		Vector: "AV:A/AC:L/Au:N/C:C/I:C/A:C/CDP:H/TD:H/CR:H/IR:ND/AR:ND",
 		ExpectedCVSS20: &CVSS20{
-			base: base{
-				accessVector:          "A",
-				accessComplexity:      "L",
-				authentication:        "N",
-				confidentialityImpact: "C",
-				integrityImpact:       "C",
-				availabilityImpact:    "C",
-			},
-			temporal: temporal{
-				exploitability:   "ND",
-				remediationLevel: "ND",
-				reportConfidence: "ND",
-			},
-			environmental: environmental{
-				collateralDamagePotential:  "H",
-				targetDistribution:         "H",
-				confidentialityRequirement: "H",
-				integrityRequirement:       "ND",
-				availabilityRequirement:    "ND",
-			},
+			u0: 0b01001010,
+			u1: 0b10100000,
+			u2: 0b00001011,
+			u3: 0b00110000,
 		},
 		ExpectedErr: nil,
 	},
@@ -225,82 +129,19 @@ func TestScores(t *testing.T) {
 		ExpectedEnvironmentalScore float64
 	}{
 		"CVSS v2.0 Guide Section 3.3.1 CVE-2002-0392": {
-			CVSS20: &CVSS20{
-				base: base{
-					accessVector:          "N",
-					accessComplexity:      "L",
-					authentication:        "N",
-					confidentialityImpact: "N",
-					integrityImpact:       "N",
-					availabilityImpact:    "C",
-				},
-				temporal: temporal{
-					exploitability:   "F",
-					remediationLevel: "OF",
-					reportConfidence: "C",
-				},
-				environmental: environmental{
-					collateralDamagePotential:  "ND",
-					targetDistribution:         "ND",
-					confidentialityRequirement: "ND",
-					integrityRequirement:       "ND",
-					availabilityRequirement:    "ND",
-				},
-			},
+			CVSS20:                     must(ParseVector("AV:N/AC:L/Au:N/C:N/I:N/A:C")),
 			ExpectedBaseScore:          7.8,
 			ExpectedTemporalScore:      6.4,
 			ExpectedEnvironmentalScore: 6.4,
 		},
 		"CVSS v2.0 Guide Section 3.3.2 CVE-2003-0818": {
-			CVSS20: &CVSS20{
-				base: base{
-					accessVector:          "N",
-					accessComplexity:      "L",
-					authentication:        "N",
-					confidentialityImpact: "C",
-					integrityImpact:       "C",
-					availabilityImpact:    "C",
-				},
-				temporal: temporal{
-					exploitability:   "F",
-					remediationLevel: "OF",
-					reportConfidence: "C",
-				},
-				environmental: environmental{
-					collateralDamagePotential:  "ND",
-					targetDistribution:         "ND",
-					confidentialityRequirement: "ND",
-					integrityRequirement:       "ND",
-					availabilityRequirement:    "ND",
-				},
-			},
+			CVSS20:                     must(ParseVector("AV:N/AC:L/Au:N/C:C/I:C/A:C")),
 			ExpectedBaseScore:          10.0,
 			ExpectedTemporalScore:      8.3,
 			ExpectedEnvironmentalScore: 8.3,
 		},
 		"CVSS v2.0 Guide Section 3.3.3 CVE-2003-0062": {
-			CVSS20: &CVSS20{
-				base: base{
-					accessVector:          "L",
-					accessComplexity:      "H",
-					authentication:        "N",
-					confidentialityImpact: "C",
-					integrityImpact:       "C",
-					availabilityImpact:    "C",
-				},
-				temporal: temporal{
-					exploitability:   "POC",
-					remediationLevel: "OF",
-					reportConfidence: "C",
-				},
-				environmental: environmental{
-					collateralDamagePotential:  "ND",
-					targetDistribution:         "ND",
-					confidentialityRequirement: "ND",
-					integrityRequirement:       "ND",
-					availabilityRequirement:    "ND",
-				},
-			},
+			CVSS20:                     must(ParseVector("AV:L/AC:H/Au:N/C:C/I:C/A:C")),
 			ExpectedBaseScore:          6.2,
 			ExpectedTemporalScore:      4.9,
 			ExpectedEnvironmentalScore: 4.9,
@@ -320,4 +161,11 @@ func TestScores(t *testing.T) {
 			assert.Equal(tt.ExpectedEnvironmentalScore, environmentalScore)
 		})
 	}
+}
+
+func must[T any](t T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return t
 }

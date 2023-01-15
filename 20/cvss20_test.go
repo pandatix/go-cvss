@@ -129,19 +129,19 @@ func TestScores(t *testing.T) {
 		ExpectedEnvironmentalScore float64
 	}{
 		"CVSS v2.0 Guide Section 3.3.1 CVE-2002-0392": {
-			CVSS20:                     must(ParseVector("AV:N/AC:L/Au:N/C:N/I:N/A:C")),
+			CVSS20:                     must(ParseVector("AV:N/AC:L/Au:N/C:N/I:N/A:C/E:F/RL:OF/RC:C")),
 			ExpectedBaseScore:          7.8,
 			ExpectedTemporalScore:      6.4,
 			ExpectedEnvironmentalScore: 6.4,
 		},
 		"CVSS v2.0 Guide Section 3.3.2 CVE-2003-0818": {
-			CVSS20:                     must(ParseVector("AV:N/AC:L/Au:N/C:C/I:C/A:C")),
+			CVSS20:                     must(ParseVector("AV:N/AC:L/Au:N/C:C/I:C/A:C/E:F/RL:OF/RC:C")),
 			ExpectedBaseScore:          10.0,
 			ExpectedTemporalScore:      8.3,
 			ExpectedEnvironmentalScore: 8.3,
 		},
 		"CVSS v2.0 Guide Section 3.3.3 CVE-2003-0062": {
-			CVSS20:                     must(ParseVector("AV:L/AC:H/Au:N/C:C/I:C/A:C")),
+			CVSS20:                     must(ParseVector("AV:L/AC:H/Au:N/C:C/I:C/A:C/E:POC/RL:OF/RC:C")),
 			ExpectedBaseScore:          6.2,
 			ExpectedTemporalScore:      4.9,
 			ExpectedEnvironmentalScore: 4.9,

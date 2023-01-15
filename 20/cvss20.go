@@ -16,7 +16,11 @@ var order = [][]string{
 // ParseVector parses a CVSS v2.0 vector.
 func ParseVector(vector string) (*CVSS20, error) {
 	// Split parts
-	pts := split(vector)
+	partsPtr := splitPool.Get()
+	defer splitPool.Put(partsPtr)
+	pts := partsPtr.([]string)
+	ei := split(pts, vector)
+	pts = pts[:ei+1]
 
 	// Work on each CVSS part
 	cvss20 := &CVSS20{
@@ -72,18 +76,14 @@ var splitPool = sync.Pool{
 	},
 }
 
-func split(vector string) []string {
-	partsPtr := splitPool.Get()
-	defer splitPool.Put(partsPtr)
-	parts := partsPtr.([]string)
-
+func split(dst []string, vector string) int {
 	start := 0
 	curr := 0
 	l := len(vector)
 	i := 0
 	for ; i < l; i++ {
 		if vector[i] == '/' {
-			parts[curr] = vector[start:i]
+			dst[curr] = vector[start:i]
 
 			start = i + 1
 			curr++
@@ -93,8 +93,8 @@ func split(vector string) []string {
 			}
 		}
 	}
-	parts[curr] = vector[start:]
-	return parts[:curr+1]
+	dst[curr] = vector[start:]
+	return curr
 }
 
 func (cvss20 CVSS20) Vector() string {

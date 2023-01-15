@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	ErrInvalidCVSSHeader  = errors.New("invalid CVSS v3.0 header")
+	ErrInvalidCVSSHeader  = errors.New("invalid CVSS v3.1 header")
 	ErrTooShortVector     = errors.New("too short vector")
 	ErrInvalidMetricValue = errors.New("invalid metric value")
 	ErrOutOfBoundsScore   = errors.New("out of bounds score")
@@ -31,7 +31,7 @@ type ErrDefinedN struct {
 }
 
 func (err ErrDefinedN) Error() string {
-	return fmt.Sprintf("given CVSS v3.0 vector has %s metric abbreviation defined multiple times", err.Abv)
+	return fmt.Sprintf("given CVSS v3.1 vector has %s metric abbreviation defined multiple times", err.Abv)
 }
 
 var _ error = (*ErrDefinedN)(nil)

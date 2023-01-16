@@ -158,6 +158,9 @@ Nevertheless, this has been judged over-optimizations for now, but a motivated d
 
 The following are the results of the comparison with others Go CVSS implementations, based on its own [benchmarking suite](./benchmarks).
 
+For each metric (`% ns/op`, `% B/op`, `% allocs/op`), the result of an implementation is normalised to the result of the current module for this given metric.
+This simply comparisons and shows how well it performs.
+
 Benchmarks results for CVSS v2.
 <div align="center">
 	<img src="res/benchmarks-results-cvss-v2.png">

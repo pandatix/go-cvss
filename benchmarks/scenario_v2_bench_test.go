@@ -8,6 +8,8 @@ import (
 	pandatix20 "github.com/pandatix/go-cvss/20"
 	slimsec "github.com/slimsec/cvss"
 	umisama "github.com/umisama/go-cvss"
+	zntrioVec2 "go.zenithar.org/mitre/pkg/protocol/mitre/cvss/v2"
+	zntrio2 "go.zenithar.org/mitre/pkg/services/cvss/v2/vector"
 )
 
 const (
@@ -66,6 +68,19 @@ func Benchmark_V2_ParseVector(b *testing.B) {
 			Gerr = err
 		})
 	})
+	// slimsec/cvss can't handle CVSS v2 parsing
+	b.Run("zntrio/mitre", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			var vec *zntrioVec2.Vector
+			var err error
+			for pb.Next() {
+				vec, err = zntrio2.FromString(cvss20vector)
+			}
+			Gzntrio2Vec = vec
+			Gerr = err
+		})
+	})
 }
 
 // This benchmarks the vectorizing function on a CVSS v2.0 vector.
@@ -109,6 +124,20 @@ func Benchmark_V2_Vector(b *testing.B) {
 				str = vec.String()
 			}
 			Gstr = str
+		})
+	})
+	// slimsec/cvss can't handle CVSS v2 vectorizing
+	b.Run("zntrio/mitre", func(b *testing.B) {
+		vec, _ := zntrio2.FromString(cvss20vector)
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			var str string
+			var err error
+			for pb.Next() {
+				str, err = zntrio2.ToString(vec)
+			}
+			Gstr = str
+			Gerr = err
 		})
 	})
 }
@@ -176,6 +205,7 @@ func Benchmark_V2_BaseScore(b *testing.B) {
 			Gerr = err
 		})
 	})
+	// zntrio/mitre can't handle base score computing ONLY
 }
 
 var (
@@ -183,4 +213,5 @@ var (
 	GgoarkVec2    *goark2.CVSS
 	GumisamaVec2  umisama.Vectors
 	GfacebookVec2 facebook2.Vector
+	Gzntrio2Vec   *zntrioVec2.Vector
 )

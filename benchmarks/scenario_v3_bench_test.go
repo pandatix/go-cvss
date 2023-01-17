@@ -66,6 +66,8 @@ func Benchmark_V3_ParseVector(b *testing.B) {
 			Gerr = err
 		})
 	})
+	// slimsec/cvss can't handle CVSS v3 parsing
+	// zntrio/mitre can't handle CVSS v3 parsing
 }
 
 // This benchmarks the vectorizing function on a CVSS v3.1 vector.
@@ -117,6 +119,8 @@ func Benchmark_V3_Vector(b *testing.B) {
 			Gstr = str
 		})
 	})
+	// slimsec/cvss can't handle CVSS v3 vectorizing
+	// zntrio/mitre can't handle CVSS v3 vectorizing due to unhandled parsing
 }
 
 // This benchmarks the base score computing on a CVSS v3.1 vector.
@@ -167,6 +171,8 @@ func Benchmark_V3_BaseScore(b *testing.B) {
 			Gf = f
 		})
 	})
+	// slimsec/cvss can't handle CVSS v3 base score computing
+	// zntrio/mitre can't handle CVSS v3 base score computing due to unhandled parsing
 }
 
 var (

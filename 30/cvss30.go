@@ -22,7 +22,7 @@ func ParseVector(vector string) (*CVSS30, error) {
 	vector = vector[len(header):]
 
 	// Allocate CVSS v3.1 object
-	cvss31 := &CVSS30{
+	cvss30 := &CVSS30{
 		u0: 0,
 		u1: 0,
 		u2: 0,
@@ -41,7 +41,7 @@ func ParseVector(vector string) (*CVSS30, error) {
 			if err := kvm.Set(a); err != nil {
 				return nil, err
 			}
-			if err := cvss31.Set(a, v); err != nil {
+			if err := cvss30.Set(a, v); err != nil {
 				return nil, err
 			}
 			start = i + 1
@@ -74,7 +74,7 @@ func ParseVector(vector string) (*CVSS30, error) {
 		return nil, &ErrMissing{Abv: "A"}
 	}
 
-	return cvss31, nil
+	return cvss30, nil
 }
 
 // splitCouple is more efficient than `strings.Cut` as it is
@@ -89,43 +89,43 @@ func splitCouple(couple string) (string, string) {
 }
 
 // Vector returns the CVSS v3.1 vector string representation.
-func (cvss31 CVSS30) Vector() string {
-	l := lenVec(&cvss31)
+func (cvss30 CVSS30) Vector() string {
+	l := lenVec(&cvss30)
 	b := make([]byte, 0, l)
 	b = append(b, header...)
 
 	// Base
-	mandatory(&b, "AV:", cvss31.get("AV"))
-	mandatory(&b, "/AC:", cvss31.get("AC"))
-	mandatory(&b, "/PR:", cvss31.get("PR"))
-	mandatory(&b, "/UI:", cvss31.get("UI"))
-	mandatory(&b, "/S:", cvss31.get("S"))
-	mandatory(&b, "/C:", cvss31.get("C"))
-	mandatory(&b, "/I:", cvss31.get("I"))
-	mandatory(&b, "/A:", cvss31.get("A"))
+	mandatory(&b, "AV:", cvss30.get("AV"))
+	mandatory(&b, "/AC:", cvss30.get("AC"))
+	mandatory(&b, "/PR:", cvss30.get("PR"))
+	mandatory(&b, "/UI:", cvss30.get("UI"))
+	mandatory(&b, "/S:", cvss30.get("S"))
+	mandatory(&b, "/C:", cvss30.get("C"))
+	mandatory(&b, "/I:", cvss30.get("I"))
+	mandatory(&b, "/A:", cvss30.get("A"))
 
 	// Temporal
-	notMandatory(&b, "/E:", cvss31.get("E"))
-	notMandatory(&b, "/RL:", cvss31.get("RL"))
-	notMandatory(&b, "/RC:", cvss31.get("RC"))
+	notMandatory(&b, "/E:", cvss30.get("E"))
+	notMandatory(&b, "/RL:", cvss30.get("RL"))
+	notMandatory(&b, "/RC:", cvss30.get("RC"))
 
 	// Environmental
-	notMandatory(&b, "/CR:", cvss31.get("CR"))
-	notMandatory(&b, "/IR:", cvss31.get("IR"))
-	notMandatory(&b, "/AR:", cvss31.get("AR"))
-	notMandatory(&b, "/MAV:", cvss31.get("MAV"))
-	notMandatory(&b, "/MAC:", cvss31.get("MAC"))
-	notMandatory(&b, "/MPR:", cvss31.get("MPR"))
-	notMandatory(&b, "/MUI:", cvss31.get("MUI"))
-	notMandatory(&b, "/MS:", cvss31.get("MS"))
-	notMandatory(&b, "/MC:", cvss31.get("MC"))
-	notMandatory(&b, "/MI:", cvss31.get("MI"))
-	notMandatory(&b, "/MA:", cvss31.get("MA"))
+	notMandatory(&b, "/CR:", cvss30.get("CR"))
+	notMandatory(&b, "/IR:", cvss30.get("IR"))
+	notMandatory(&b, "/AR:", cvss30.get("AR"))
+	notMandatory(&b, "/MAV:", cvss30.get("MAV"))
+	notMandatory(&b, "/MAC:", cvss30.get("MAC"))
+	notMandatory(&b, "/MPR:", cvss30.get("MPR"))
+	notMandatory(&b, "/MUI:", cvss30.get("MUI"))
+	notMandatory(&b, "/MS:", cvss30.get("MS"))
+	notMandatory(&b, "/MC:", cvss30.get("MC"))
+	notMandatory(&b, "/MI:", cvss30.get("MI"))
+	notMandatory(&b, "/MA:", cvss30.get("MA"))
 
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-func lenVec(cvss31 *CVSS30) int {
+func lenVec(cvss30 *CVSS30) int {
 	// Header: constant, so fixed (9)
 	// Base:
 	// - AV, AC, PR, UI: 4
@@ -138,13 +138,13 @@ func lenVec(cvss31 *CVSS30) int {
 	// - E: 3
 	// - RL, RC: 4
 	// - each one adds a separator
-	if cvss31.get("E") != "X" {
+	if cvss30.get("E") != "X" {
 		l += 4
 	}
-	if cvss31.get("RL") != "X" {
+	if cvss30.get("RL") != "X" {
 		l += 5
 	}
-	if cvss31.get("RC") != "X" {
+	if cvss30.get("RC") != "X" {
 		l += 5
 	}
 
@@ -152,37 +152,37 @@ func lenVec(cvss31 *CVSS30) int {
 	// - CR, IR, AR, MS, MC, MI, MA: 4
 	// - MAV, MAC, MPR, MUI: 5
 	// - each one adds a separator
-	if cvss31.get("CR") != "X" {
+	if cvss30.get("CR") != "X" {
 		l += 5
 	}
-	if cvss31.get("IR") != "X" {
+	if cvss30.get("IR") != "X" {
 		l += 5
 	}
-	if cvss31.get("AR") != "X" {
+	if cvss30.get("AR") != "X" {
 		l += 5
 	}
-	if cvss31.get("MS") != "X" {
+	if cvss30.get("MS") != "X" {
 		l += 5
 	}
-	if cvss31.get("MC") != "X" {
+	if cvss30.get("MC") != "X" {
 		l += 5
 	}
-	if cvss31.get("MI") != "X" {
+	if cvss30.get("MI") != "X" {
 		l += 5
 	}
-	if cvss31.get("MA") != "X" {
+	if cvss30.get("MA") != "X" {
 		l += 5
 	}
-	if cvss31.get("MAV") != "X" {
+	if cvss30.get("MAV") != "X" {
 		l += 6
 	}
-	if cvss31.get("MAC") != "X" {
+	if cvss30.get("MAC") != "X" {
 		l += 6
 	}
-	if cvss31.get("MPR") != "X" {
+	if cvss30.get("MPR") != "X" {
 		l += 6
 	}
-	if cvss31.get("MUI") != "X" {
+	if cvss30.get("MUI") != "X" {
 		l += 6
 	}
 
@@ -208,11 +208,11 @@ type CVSS30 struct {
 }
 
 // Get returns the value of the given metric abbreviation.
-func (cvss31 CVSS30) Get(abv string) (r string, err error) {
+func (cvss30 CVSS30) Get(abv string) (r string, err error) {
 	switch abv {
 	// Base
 	case "AV":
-		v := (cvss31.u0 & 0b11000000) >> 6
+		v := (cvss30.u0 & 0b11000000) >> 6
 		switch v {
 		case av_n:
 			r = "N"
@@ -224,7 +224,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "P"
 		}
 	case "AC":
-		v := (cvss31.u0 & 0b00100000) >> 5
+		v := (cvss30.u0 & 0b00100000) >> 5
 		switch v {
 		case ac_l:
 			r = "L"
@@ -232,7 +232,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "H"
 		}
 	case "PR":
-		v := (cvss31.u0 & 0b00011000) >> 3
+		v := (cvss30.u0 & 0b00011000) >> 3
 		switch v {
 		case pr_n:
 			r = "N"
@@ -242,7 +242,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "H"
 		}
 	case "UI":
-		v := (cvss31.u0 & 0b00000100) >> 2
+		v := (cvss30.u0 & 0b00000100) >> 2
 		switch v {
 		case ui_n:
 			r = "N"
@@ -250,7 +250,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "R"
 		}
 	case "S":
-		v := (cvss31.u0 & 0b00000010) >> 1
+		v := (cvss30.u0 & 0b00000010) >> 1
 		switch v {
 		case s_u:
 			r = "U"
@@ -258,7 +258,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "C"
 		}
 	case "C":
-		v := ((cvss31.u0 & 0b00000001) << 1) | (cvss31.u1&0b10000000)>>7
+		v := ((cvss30.u0 & 0b00000001) << 1) | (cvss30.u1&0b10000000)>>7
 		switch v {
 		case cia_h:
 			r = "H"
@@ -268,7 +268,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "N"
 		}
 	case "I":
-		v := (cvss31.u1 & 0b01100000) >> 5
+		v := (cvss30.u1 & 0b01100000) >> 5
 		switch v {
 		case cia_h:
 			r = "H"
@@ -278,7 +278,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "N"
 		}
 	case "A":
-		v := (cvss31.u1 & 0b00011000) >> 3
+		v := (cvss30.u1 & 0b00011000) >> 3
 		switch v {
 		case cia_h:
 			r = "H"
@@ -290,7 +290,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 
 	// Temporal
 	case "E":
-		v := cvss31.u1 & 0b00000111
+		v := cvss30.u1 & 0b00000111
 		switch v {
 		case e_x:
 			r = "X"
@@ -304,7 +304,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "U"
 		}
 	case "RL":
-		v := (cvss31.u2 & 0b11100000) >> 5
+		v := (cvss30.u2 & 0b11100000) >> 5
 		switch v {
 		case rl_x:
 			r = "X"
@@ -318,7 +318,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "O"
 		}
 	case "RC":
-		v := (cvss31.u2 & 0b00011000) >> 3
+		v := (cvss30.u2 & 0b00011000) >> 3
 		switch v {
 		case rc_x:
 			r = "X"
@@ -332,7 +332,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 
 	// Environmental
 	case "CR":
-		v := (cvss31.u2 & 0b00000110) >> 1
+		v := (cvss30.u2 & 0b00000110) >> 1
 		switch v {
 		case ciar_x:
 			r = "X"
@@ -344,7 +344,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "L"
 		}
 	case "IR":
-		v := ((cvss31.u2 & 0b00000001) << 1) | ((cvss31.u3 & 0b10000000) >> 7)
+		v := ((cvss30.u2 & 0b00000001) << 1) | ((cvss30.u3 & 0b10000000) >> 7)
 		switch v {
 		case ciar_x:
 			r = "X"
@@ -356,7 +356,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "L"
 		}
 	case "AR":
-		v := (cvss31.u3 & 0b01100000) >> 5
+		v := (cvss30.u3 & 0b01100000) >> 5
 		switch v {
 		case ciar_x:
 			r = "X"
@@ -368,7 +368,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "L"
 		}
 	case "MAV":
-		v := (cvss31.u3 & 0b00011100) >> 2
+		v := (cvss30.u3 & 0b00011100) >> 2
 		switch v {
 		case mav_x:
 			r = "X"
@@ -382,7 +382,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "P"
 		}
 	case "MAC":
-		v := cvss31.u3 & 0b00000011
+		v := cvss30.u3 & 0b00000011
 		switch v {
 		case mac_x:
 			r = "X"
@@ -392,7 +392,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "H"
 		}
 	case "MPR":
-		v := (cvss31.u4 & 0b11000000) >> 6
+		v := (cvss30.u4 & 0b11000000) >> 6
 		switch v {
 		case mpr_x:
 			r = "X"
@@ -404,7 +404,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "H"
 		}
 	case "MUI":
-		v := (cvss31.u4 & 0b00110000) >> 4
+		v := (cvss30.u4 & 0b00110000) >> 4
 		switch v {
 		case mui_x:
 			r = "X"
@@ -414,7 +414,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "R"
 		}
 	case "MS":
-		v := (cvss31.u4 & 0b00001100) >> 2
+		v := (cvss30.u4 & 0b00001100) >> 2
 		switch v {
 		case ms_x:
 			r = "X"
@@ -424,7 +424,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "C"
 		}
 	case "MC":
-		v := cvss31.u4 & 0b00000011
+		v := cvss30.u4 & 0b00000011
 		switch v {
 		case mcia_x:
 			r = "X"
@@ -436,7 +436,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "H"
 		}
 	case "MI":
-		v := (cvss31.u5 & 0b11000000) >> 6
+		v := (cvss30.u5 & 0b11000000) >> 6
 		switch v {
 		case mcia_x:
 			r = "X"
@@ -448,7 +448,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 			r = "H"
 		}
 	case "MA":
-		v := (cvss31.u5 & 0b00110000) >> 4
+		v := (cvss30.u5 & 0b00110000) >> 4
 		switch v {
 		case mcia_x:
 			r = "X"
@@ -466,7 +466,7 @@ func (cvss31 CVSS30) Get(abv string) (r string, err error) {
 }
 
 // Set sets the value of the given metric abbreviation.
-func (cvss31 *CVSS30) Set(abv string, value string) error {
+func (cvss30 *CVSS30) Set(abv string, value string) error {
 	switch abv {
 	// Base
 	case "AV":
@@ -474,50 +474,50 @@ func (cvss31 *CVSS30) Set(abv string, value string) error {
 		if err != nil {
 			return err
 		}
-		cvss31.u0 = (cvss31.u0 & 0b00111111) | (v << 6)
+		cvss30.u0 = (cvss30.u0 & 0b00111111) | (v << 6)
 	case "AC":
 		v, err := validate(value, []string{"L", "H"})
 		if err != nil {
 			return err
 		}
-		cvss31.u0 = (cvss31.u0 & 0b11011111) | (v << 5)
+		cvss30.u0 = (cvss30.u0 & 0b11011111) | (v << 5)
 	case "PR":
 		v, err := validate(value, []string{"N", "L", "H"})
 		if err != nil {
 			return err
 		}
-		cvss31.u0 = (cvss31.u0 & 0b11100111) | (v << 3)
+		cvss30.u0 = (cvss30.u0 & 0b11100111) | (v << 3)
 	case "UI":
 		v, err := validate(value, []string{"N", "R"})
 		if err != nil {
 			return err
 		}
-		cvss31.u0 = (cvss31.u0 & 0b11111011) | (v << 2)
+		cvss30.u0 = (cvss30.u0 & 0b11111011) | (v << 2)
 	case "S":
 		v, err := validate(value, []string{"U", "C"})
 		if err != nil {
 			return err
 		}
-		cvss31.u0 = (cvss31.u0 & 0b11111101) | (v << 1)
+		cvss30.u0 = (cvss30.u0 & 0b11111101) | (v << 1)
 	case "C":
 		v, err := validate(value, []string{"H", "L", "N"})
 		if err != nil {
 			return err
 		}
-		cvss31.u0 = (cvss31.u0 & 0b11111110) | ((v & 0b10) >> 1)
-		cvss31.u1 = (cvss31.u1 & 0b01111111) | ((v & 0b01) << 7)
+		cvss30.u0 = (cvss30.u0 & 0b11111110) | ((v & 0b10) >> 1)
+		cvss30.u1 = (cvss30.u1 & 0b01111111) | ((v & 0b01) << 7)
 	case "I":
 		v, err := validate(value, []string{"H", "L", "N"})
 		if err != nil {
 			return err
 		}
-		cvss31.u1 = (cvss31.u1 & 0b10011111) | (v << 5)
+		cvss30.u1 = (cvss30.u1 & 0b10011111) | (v << 5)
 	case "A":
 		v, err := validate(value, []string{"H", "L", "N"})
 		if err != nil {
 			return err
 		}
-		cvss31.u1 = (cvss31.u1 & 0b11100111) | (v << 3)
+		cvss30.u1 = (cvss30.u1 & 0b11100111) | (v << 3)
 
 	// Temporal
 	case "E":
@@ -525,19 +525,19 @@ func (cvss31 *CVSS30) Set(abv string, value string) error {
 		if err != nil {
 			return err
 		}
-		cvss31.u1 = (cvss31.u1 & 0b11111000) | v
+		cvss30.u1 = (cvss30.u1 & 0b11111000) | v
 	case "RL":
 		v, err := validate(value, []string{"X", "U", "W", "T", "O"})
 		if err != nil {
 			return err
 		}
-		cvss31.u2 = (cvss31.u2 & 0b00011111) | (v << 5)
+		cvss30.u2 = (cvss30.u2 & 0b00011111) | (v << 5)
 	case "RC":
 		v, err := validate(value, []string{"X", "C", "R", "U"})
 		if err != nil {
 			return err
 		}
-		cvss31.u2 = (cvss31.u2 & 0b11100111) | (v << 3)
+		cvss30.u2 = (cvss30.u2 & 0b11100111) | (v << 3)
 
 	// Environmental
 	case "CR":
@@ -545,68 +545,68 @@ func (cvss31 *CVSS30) Set(abv string, value string) error {
 		if err != nil {
 			return err
 		}
-		cvss31.u2 = (cvss31.u2 & 0b11111001) | (v << 1)
+		cvss30.u2 = (cvss30.u2 & 0b11111001) | (v << 1)
 	case "IR":
 		v, err := validate(value, []string{"X", "H", "M", "L"})
 		if err != nil {
 			return err
 		}
-		cvss31.u2 = (cvss31.u2 & 0b11111110) | ((v & 0b10) >> 1)
-		cvss31.u3 = (cvss31.u3 & 0b01111111) | ((v & 0b01) << 7)
+		cvss30.u2 = (cvss30.u2 & 0b11111110) | ((v & 0b10) >> 1)
+		cvss30.u3 = (cvss30.u3 & 0b01111111) | ((v & 0b01) << 7)
 	case "AR":
 		v, err := validate(value, []string{"X", "H", "M", "L"})
 		if err != nil {
 			return err
 		}
-		cvss31.u3 = (cvss31.u3 & 0b10011111) | (v << 5)
+		cvss30.u3 = (cvss30.u3 & 0b10011111) | (v << 5)
 	case "MAV":
 		v, err := validate(value, []string{"X", "N", "A", "L", "P"})
 		if err != nil {
 			return err
 		}
-		cvss31.u3 = (cvss31.u3 & 0b11100011) | (v << 2)
+		cvss30.u3 = (cvss30.u3 & 0b11100011) | (v << 2)
 	case "MAC":
 		v, err := validate(value, []string{"X", "L", "H"})
 		if err != nil {
 			return err
 		}
-		cvss31.u3 = (cvss31.u3 & 0b11111100) | v
+		cvss30.u3 = (cvss30.u3 & 0b11111100) | v
 	case "MPR":
 		v, err := validate(value, []string{"X", "N", "L", "H"})
 		if err != nil {
 			return err
 		}
-		cvss31.u4 = (cvss31.u4 & 0b00111111) | (v << 6)
+		cvss30.u4 = (cvss30.u4 & 0b00111111) | (v << 6)
 	case "MUI":
 		v, err := validate(value, []string{"X", "N", "R"})
 		if err != nil {
 			return err
 		}
-		cvss31.u4 = (cvss31.u4 & 0b11001111) | (v << 4)
+		cvss30.u4 = (cvss30.u4 & 0b11001111) | (v << 4)
 	case "MS":
 		v, err := validate(value, []string{"X", "U", "C"})
 		if err != nil {
 			return err
 		}
-		cvss31.u4 = (cvss31.u4 & 0b11110011) | (v << 2)
+		cvss30.u4 = (cvss30.u4 & 0b11110011) | (v << 2)
 	case "MC":
 		v, err := validate(value, []string{"X", "H", "L", "N"})
 		if err != nil {
 			return err
 		}
-		cvss31.u4 = (cvss31.u4 & 0b11111100) | v
+		cvss30.u4 = (cvss30.u4 & 0b11111100) | v
 	case "MI":
 		v, err := validate(value, []string{"X", "H", "L", "N"})
 		if err != nil {
 			return err
 		}
-		cvss31.u5 = (cvss31.u5 & 0b00111111) | (v << 6)
+		cvss30.u5 = (cvss30.u5 & 0b00111111) | (v << 6)
 	case "MA":
 		v, err := validate(value, []string{"X", "H", "L", "N"})
 		if err != nil {
 			return err
 		}
-		cvss31.u5 = (cvss31.u5 & 0b11000000) | (v << 4)
+		cvss30.u5 = (cvss30.u5 & 0b11000000) | (v << 4)
 	default:
 		return &ErrInvalidMetric{Abv: abv}
 	}
@@ -627,57 +627,59 @@ func validate(value string, enabled []string) (i uint8, err error) {
 }
 
 // get is used for internal purposes only.
-func (cvss31 CVSS30) get(abv string) string {
-	str, _ := cvss31.Get(abv)
+func (cvss30 CVSS30) get(abv string) string {
+	str, _ := cvss30.Get(abv)
 	return str
 }
 
 // BaseScore returns the CVSS v3.1's base score.
-func (cvss31 CVSS30) BaseScore() float64 {
-	impact := cvss31.Impact()
-	exploitability := cvss31.Exploitability()
+func (cvss30 CVSS30) BaseScore() float64 {
+	impact := cvss30.Impact()
+	exploitability := cvss30.Exploitability()
 	if impact <= 0 {
 		return 0
 	}
-	if v, _ := cvss31.Get("S"); v == "U" {
+	// shortcut to avoid get("S") -> improve performances by ~40%
+	if cvss30.u0&0b00000010 == 0b10 {
 		return roundup(math.Min(impact+exploitability, 10))
 	}
 	return roundup(math.Min(1.08*(impact+exploitability), 10))
 }
 
-func (cvss31 CVSS30) Impact() float64 {
-	iss := 1 - ((1 - cia(cvss31.get("C"))) * (1 - cia(cvss31.get("I"))) * (1 - cia(cvss31.get("A"))))
-	if v, _ := cvss31.Get("S"); v == "U" {
+func (cvss30 CVSS30) Impact() float64 {
+	iss := 1 - ((1 - cia(cvss30.get("C"))) * (1 - cia(cvss30.get("I"))) * (1 - cia(cvss30.get("A"))))
+	// shortcut to avoid get("S") -> improve performances by ~40%
+	if cvss30.u0&0b00000010 == 0b10 {
 		return 6.42 * iss
 	}
 	return 7.52*(iss-0.029) - 3.25*math.Pow(iss-0.02, 15)
 }
 
-func (cvss31 CVSS30) Exploitability() float64 {
-	return 8.22 * attackVector(cvss31.get("AV")) * attackComplexity(cvss31.get("AC")) * privilegesRequired(cvss31.get("PR"), cvss31.get("S")) * userInteraction(cvss31.get("UI"))
+func (cvss30 CVSS30) Exploitability() float64 {
+	return 8.22 * attackVector(cvss30.get("AV")) * attackComplexity(cvss30.get("AC")) * privilegesRequired(cvss30.get("PR"), cvss30.get("S")) * userInteraction(cvss30.get("UI"))
 }
 
 // TemporalScore returns the CVSS v3.1's temporal score.
-func (cvss31 CVSS30) TemporalScore() float64 {
-	return roundup(cvss31.BaseScore() * exploitCodeMaturity(cvss31.get("E")) * remediationLevel(cvss31.get("RL")) * reportConfidence(cvss31.get("RC")))
+func (cvss30 CVSS30) TemporalScore() float64 {
+	return roundup(cvss30.BaseScore() * exploitCodeMaturity(cvss30.get("E")) * remediationLevel(cvss30.get("RL")) * reportConfidence(cvss30.get("RC")))
 }
 
 // EnvironmentalScore returns the CVSS v3.1's environmental score.
-func (cvss31 CVSS30) EnvironmentalScore() float64 {
+func (cvss30 CVSS30) EnvironmentalScore() float64 {
 	// Choose which to use (use base if modified is not defined).
 	// It is based on first.org online calculator's source code,
 	// while it is not explicit in the specification which value
 	// to use.
-	mav := mod(cvss31.get("AV"), cvss31.get("MAV"))
-	mac := mod(cvss31.get("AC"), cvss31.get("MAC"))
-	mpr := mod(cvss31.get("PR"), cvss31.get("MPR"))
-	mui := mod(cvss31.get("UI"), cvss31.get("MUI"))
-	ms := mod(cvss31.get("S"), cvss31.get("MS"))
-	mc := mod(cvss31.get("C"), cvss31.get("MC"))
-	mi := mod(cvss31.get("I"), cvss31.get("MI"))
-	ma := mod(cvss31.get("A"), cvss31.get("MA"))
+	mav := mod(cvss30.get("AV"), cvss30.get("MAV"))
+	mac := mod(cvss30.get("AC"), cvss30.get("MAC"))
+	mpr := mod(cvss30.get("PR"), cvss30.get("MPR"))
+	mui := mod(cvss30.get("UI"), cvss30.get("MUI"))
+	ms := mod(cvss30.get("S"), cvss30.get("MS"))
+	mc := mod(cvss30.get("C"), cvss30.get("MC"))
+	mi := mod(cvss30.get("I"), cvss30.get("MI"))
+	ma := mod(cvss30.get("A"), cvss30.get("MA"))
 
-	miss := math.Min(1-(1-ciar(cvss31.get("CR"))*cia(mc))*(1-ciar(cvss31.get("IR"))*cia(mi))*(1-ciar(cvss31.get("AR"))*cia(ma)), 0.915)
+	miss := math.Min(1-(1-ciar(cvss30.get("CR"))*cia(mc))*(1-ciar(cvss30.get("IR"))*cia(mi))*(1-ciar(cvss30.get("AR"))*cia(ma)), 0.915)
 	var modifiedImpact float64
 	if ms == "U" {
 		modifiedImpact = 6.42 * miss
@@ -689,10 +691,10 @@ func (cvss31 CVSS30) EnvironmentalScore() float64 {
 		return 0
 	}
 	if ms == "U" {
-		return roundup(roundup(math.Min(modifiedImpact+modifiedExploitability, 10)) * exploitCodeMaturity(cvss31.get("E")) * remediationLevel(cvss31.get("RL")) * reportConfidence(cvss31.get("RC")))
+		return roundup(roundup(math.Min(modifiedImpact+modifiedExploitability, 10)) * exploitCodeMaturity(cvss30.get("E")) * remediationLevel(cvss30.get("RL")) * reportConfidence(cvss30.get("RC")))
 	}
 	r := math.Min(1.08*(modifiedImpact+modifiedExploitability), 10)
-	return roundup(roundup(r) * exploitCodeMaturity(cvss31.get("E")) * remediationLevel(cvss31.get("RL")) * reportConfidence(cvss31.get("RC")))
+	return roundup(roundup(r) * exploitCodeMaturity(cvss30.get("E")) * remediationLevel(cvss30.get("RL")) * reportConfidence(cvss30.get("RC")))
 }
 
 // Rating returns the verbose for a given rating.

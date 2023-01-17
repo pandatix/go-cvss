@@ -3,6 +3,7 @@ package benchmarks
 import (
 	"testing"
 
+	facebook2 "github.com/facebookincubator/nvdtools/cvss2"
 	goark2 "github.com/goark/go-cvss/v2"
 	pandatix20 "github.com/pandatix/go-cvss/20"
 	umisama "github.com/umisama/go-cvss"
@@ -48,7 +49,19 @@ func Benchmark_V2_ParseVector(b *testing.B) {
 			for pb.Next() {
 				err = vec.ImportBaseVector(cvss20vector)
 			}
-			Ggoark2Vec = vec
+			GgoarkVec2 = vec
+			Gerr = err
+		})
+	})
+	b.Run("facebookincubator/nvdtools", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			var vec facebook2.Vector
+			var err error
+			for pb.Next() {
+				vec, err = facebook2.VectorFromString(cvss20vector)
+			}
+			GfacebookVec2 = vec
 			Gerr = err
 		})
 	})
@@ -86,6 +99,17 @@ func Benchmark_V2_Vector(b *testing.B) {
 	})
 	// bunji2/cvssv3 can't handle CVSS v2
 	// goark/go-cvss can't handle CVSS v2 vectorizing
+	b.Run("facebookincubator/nvdtools", func(b *testing.B) {
+		vec, _ := facebook2.VectorFromString(cvss20vector)
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			var str string
+			for pb.Next() {
+				str = vec.String()
+			}
+			Gstr = str
+		})
+	})
 }
 
 // This benchmarks the base score computing on a CVSS v2.0 vector.
@@ -128,10 +152,22 @@ func Benchmark_V2_BaseScore(b *testing.B) {
 			Gf = f
 		})
 	})
+	b.Run("facebookincubator/nvdtools", func(b *testing.B) {
+		vec, _ := facebook2.VectorFromString(cvss20vector)
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			var f float64
+			for pb.Next() {
+				f = vec.BaseScore()
+			}
+			Gf = f
+		})
+	})
 }
 
 var (
 	GpandatixVec2 *pandatix20.CVSS20
-	Ggoark2Vec    *goark2.CVSS
+	GgoarkVec2    *goark2.CVSS
 	GumisamaVec2  umisama.Vectors
+	GfacebookVec2 facebook2.Vector
 )

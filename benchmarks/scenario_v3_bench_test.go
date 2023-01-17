@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	bunji2 "github.com/bunji2/cvssv3"
+	facebook3 "github.com/facebookincubator/nvdtools/cvss3"
 	goark3 "github.com/goark/go-cvss/v3/metric"
 	pandatix31 "github.com/pandatix/go-cvss/31"
 )
@@ -49,7 +50,19 @@ func Benchmark_V3_ParseVector(b *testing.B) {
 			for pb.Next() {
 				_, err = vec.Decode(cvss31vector)
 			}
-			Ggoark3Vec = vec
+			GgoarkVec3 = vec
+			Gerr = err
+		})
+	})
+	b.Run("facebookincubator/nvdtools", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			var vec facebook3.Vector
+			var err error
+			for pb.Next() {
+				vec, err = facebook3.VectorFromString(cvss31vector)
+			}
+			GfacebookVec3 = vec
 			Gerr = err
 		})
 	})
@@ -93,6 +106,17 @@ func Benchmark_V3_Vector(b *testing.B) {
 			Gstr = str
 		})
 	})
+	b.Run("facebookincubator/nvdtools", func(b *testing.B) {
+		vec, _ := facebook3.VectorFromString(cvss31vector)
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			var str string
+			for pb.Next() {
+				str = vec.String()
+			}
+			Gstr = str
+		})
+	})
 }
 
 // This benchmarks the base score computing on a CVSS v3.1 vector.
@@ -132,12 +156,24 @@ func Benchmark_V3_BaseScore(b *testing.B) {
 			Gf = f
 		})
 	})
+	b.Run("facebookincubator/nvdtools", func(b *testing.B) {
+		vec, _ := facebook3.VectorFromString(cvss31vector)
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			var f float64
+			for pb.Next() {
+				f = vec.BaseScore()
+			}
+			Gf = f
+		})
+	})
 }
 
 var (
 	GpandatixVec3 *pandatix31.CVSS31
 	Gbunji2Vec    bunji2.Vector
-	Ggoark3Vec    *goark3.Base
+	GgoarkVec3    *goark3.Base
+	GfacebookVec3 facebook3.Vector
 	Gerr          error
 	Gstr          string
 	Gf            float64

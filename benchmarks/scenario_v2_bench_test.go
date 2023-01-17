@@ -6,6 +6,7 @@ import (
 	facebook2 "github.com/facebookincubator/nvdtools/cvss2"
 	goark2 "github.com/goark/go-cvss/v2"
 	pandatix20 "github.com/pandatix/go-cvss/20"
+	slimsec "github.com/slimsec/cvss"
 	umisama "github.com/umisama/go-cvss"
 )
 
@@ -161,6 +162,18 @@ func Benchmark_V2_BaseScore(b *testing.B) {
 				f = vec.BaseScore()
 			}
 			Gf = f
+		})
+	})
+	b.Run("slimsec/cvss", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			var f float64
+			var err error
+			for pb.Next() {
+				f, _ = slimsec.CalculateBaseScore(cvss20vector, 2)
+			}
+			Gf = f
+			Gerr = err
 		})
 	})
 }

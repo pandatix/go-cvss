@@ -640,7 +640,7 @@ func (cvss30 CVSS30) BaseScore() float64 {
 		return 0
 	}
 	// shortcut to avoid get("S") -> improve performances by ~40%
-	if cvss30.u0&0b00000010 == 0b10 {
+	if cvss30.u0&0b00000010 == 0 {
 		return roundup(math.Min(impact+exploitability, 10))
 	}
 	return roundup(math.Min(1.08*(impact+exploitability), 10))
@@ -649,7 +649,7 @@ func (cvss30 CVSS30) BaseScore() float64 {
 func (cvss30 CVSS30) Impact() float64 {
 	iss := 1 - ((1 - cia(cvss30.get("C"))) * (1 - cia(cvss30.get("I"))) * (1 - cia(cvss30.get("A"))))
 	// shortcut to avoid get("S") -> improve performances by ~40%
-	if cvss30.u0&0b00000010 == 0b10 {
+	if cvss30.u0&0b00000010 == 0 {
 		return 6.42 * iss
 	}
 	return 7.52*(iss-0.029) - 3.25*math.Pow(iss-0.02, 15)

@@ -3,6 +3,7 @@ package benchmarks
 import (
 	"testing"
 
+	attwad "github.com/attwad/gocvss"
 	facebook2 "github.com/facebookincubator/nvdtools/cvss2"
 	goark2 "github.com/goark/go-cvss/v2"
 	pandatix20 "github.com/pandatix/go-cvss/20"
@@ -81,6 +82,18 @@ func Benchmark_V2_ParseVector(b *testing.B) {
 			Gerr = err
 		})
 	})
+	b.Run("attwad/gocvss", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			var vec attwad.CVSS
+			var err error
+			for pb.Next() {
+				vec, err = attwad.Parse(cvss20vector)
+			}
+			GattwadVec = vec
+			Gerr = err
+		})
+	})
 }
 
 // This benchmarks the vectorizing function on a CVSS v2.0 vector.
@@ -138,6 +151,17 @@ func Benchmark_V2_Vector(b *testing.B) {
 			}
 			Gstr = str
 			Gerr = err
+		})
+	})
+	b.Run("attwad/gocvss", func(b *testing.B) {
+		vec, _ := attwad.Parse(cvss20vector)
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			var str string
+			for pb.Next() {
+				str = vec.ToStringVector()
+			}
+			Gstr = str
 		})
 	})
 }
@@ -206,6 +230,7 @@ func Benchmark_V2_BaseScore(b *testing.B) {
 		})
 	})
 	// zntrio/mitre can't handle base score computing ONLY
+	// attwad/gocvss can't handle base score computing ONLY
 }
 
 var (
@@ -214,4 +239,5 @@ var (
 	GumisamaVec2  umisama.Vectors
 	GfacebookVec2 facebook2.Vector
 	Gzntrio2Vec   *zntrioVec2.Vector
+	GattwadVec    attwad.CVSS
 )

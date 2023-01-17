@@ -8,6 +8,7 @@ replace github.com/pandatix/go-cvss => ../
 replace go.zenithar.org/mitre => github.com/zntrio/mitre v0.0.1
 
 require (
+	github.com/attwad/gocvss v0.0.0-20150121011547-982b87a1eb8d
 	github.com/bunji2/cvssv3 v0.0.0-20191208005905-79ce3fdeaf96
 	github.com/facebookincubator/nvdtools v0.1.5
 	github.com/goark/go-cvss v1.3.0

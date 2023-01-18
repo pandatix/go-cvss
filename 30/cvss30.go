@@ -13,7 +13,7 @@ const (
 )
 
 // ParseVector parses a given vector string, validates it
-// and returns a CVSS31.
+// and returns a CVSS30.
 func ParseVector(vector string) (*CVSS30, error) {
 	// Check header
 	if !strings.HasPrefix(vector, header) {
@@ -138,13 +138,16 @@ func lenVec(cvss30 *CVSS30) int {
 	// - E: 3
 	// - RL, RC: 4
 	// - each one adds a separator
-	if cvss30.get("E") != "X" {
+	// shortcut for "E" metric
+	if (cvss30.u1 & 0b00000111) != 0 {
 		l += 4
 	}
-	if cvss30.get("RL") != "X" {
+	// shortcut for "RL" metric
+	if (cvss30.u2 & 0b11100000) != 0 {
 		l += 5
 	}
-	if cvss30.get("RC") != "X" {
+	// shortcut for "RC" metric
+	if (cvss30.u2 & 0b00011000) != 0 {
 		l += 5
 	}
 
@@ -152,37 +155,48 @@ func lenVec(cvss30 *CVSS30) int {
 	// - CR, IR, AR, MS, MC, MI, MA: 4
 	// - MAV, MAC, MPR, MUI: 5
 	// - each one adds a separator
-	if cvss30.get("CR") != "X" {
+	// shortcut for "CR" metric
+	if (cvss30.u2 & 0b00000110) != 0 {
 		l += 5
 	}
-	if cvss30.get("IR") != "X" {
+	// shortcut for "IR" metric
+	if (cvss30.u2&0b00000001) != 0 || (cvss30.u3&0b10000000) != 0 {
 		l += 5
 	}
-	if cvss30.get("AR") != "X" {
+	// shortcut for "AR" metric
+	if (cvss30.u3 & 0b01100000) != 0 {
 		l += 5
 	}
-	if cvss30.get("MS") != "X" {
+	// shortcut for "MS" metric
+	if (cvss30.u4 & 0b00001100) != 0 {
 		l += 5
 	}
-	if cvss30.get("MC") != "X" {
+	// shortcut for "MC" metric
+	if (cvss30.u4 & 0b00000011) != 0 {
 		l += 5
 	}
-	if cvss30.get("MI") != "X" {
+	// shortcut for "MI" metric
+	if (cvss30.u5 & 0b11000000) != 0 {
 		l += 5
 	}
-	if cvss30.get("MA") != "X" {
+	// shortcut for "MA" metric
+	if (cvss30.u5 & 0b00110000) != 0 {
 		l += 5
 	}
-	if cvss30.get("MAV") != "X" {
+	// shortcut for "MAV" metric
+	if (cvss30.u3 & 0b00011100) != 0 {
 		l += 6
 	}
-	if cvss30.get("MAC") != "X" {
+	// shortcut for "MAC" metric
+	if (cvss30.u3 & 0b00000011) != 0 {
 		l += 6
 	}
-	if cvss30.get("MPR") != "X" {
+	// shortcut for "MPR" metric
+	if (cvss30.u4 & 0b11000000) != 0 {
 		l += 6
 	}
-	if cvss30.get("MUI") != "X" {
+	// shortcut for "MUI" metric
+	if (cvss30.u4 & 0b00110000) != 0 {
 		l += 6
 	}
 

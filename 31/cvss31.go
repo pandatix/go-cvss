@@ -138,13 +138,16 @@ func lenVec(cvss31 *CVSS31) int {
 	// - E: 3
 	// - RL, RC: 4
 	// - each one adds a separator
-	if cvss31.get("E") != "X" {
+	// shortcut for "E" metric
+	if (cvss31.u1 & 0b00000111) != 0 {
 		l += 4
 	}
-	if cvss31.get("RL") != "X" {
+	// shortcut for "RL" metric
+	if (cvss31.u2 & 0b11100000) != 0 {
 		l += 5
 	}
-	if cvss31.get("RC") != "X" {
+	// shortcut for "RC" metric
+	if (cvss31.u2 & 0b00011000) != 0 {
 		l += 5
 	}
 
@@ -152,37 +155,48 @@ func lenVec(cvss31 *CVSS31) int {
 	// - CR, IR, AR, MS, MC, MI, MA: 4
 	// - MAV, MAC, MPR, MUI: 5
 	// - each one adds a separator
-	if cvss31.get("CR") != "X" {
+	// shortcut for "CR" metric
+	if (cvss31.u2 & 0b00000110) != 0 {
 		l += 5
 	}
-	if cvss31.get("IR") != "X" {
+	// shortcut for "IR" metric
+	if (cvss31.u2&0b00000001) != 0 || (cvss31.u3&0b10000000) != 0 {
 		l += 5
 	}
-	if cvss31.get("AR") != "X" {
+	// shortcut for "AR" metric
+	if (cvss31.u3 & 0b01100000) != 0 {
 		l += 5
 	}
-	if cvss31.get("MS") != "X" {
+	// shortcut for "MS" metric
+	if (cvss31.u4 & 0b00001100) != 0 {
 		l += 5
 	}
-	if cvss31.get("MC") != "X" {
+	// shortcut for "MC" metric
+	if (cvss31.u4 & 0b00000011) != 0 {
 		l += 5
 	}
-	if cvss31.get("MI") != "X" {
+	// shortcut for "MI" metric
+	if (cvss31.u5 & 0b11000000) != 0 {
 		l += 5
 	}
-	if cvss31.get("MA") != "X" {
+	// shortcut for "MA" metric
+	if (cvss31.u5 & 0b00110000) != 0 {
 		l += 5
 	}
-	if cvss31.get("MAV") != "X" {
+	// shortcut for "MAV" metric
+	if (cvss31.u3 & 0b00011100) != 0 {
 		l += 6
 	}
-	if cvss31.get("MAC") != "X" {
+	// shortcut for "MAC" metric
+	if (cvss31.u3 & 0b00000011) != 0 {
 		l += 6
 	}
-	if cvss31.get("MPR") != "X" {
+	// shortcut for "MPR" metric
+	if (cvss31.u4 & 0b11000000) != 0 {
 		l += 6
 	}
-	if cvss31.get("MUI") != "X" {
+	// shortcut for "MUI" metric
+	if (cvss31.u4 & 0b00110000) != 0 {
 		l += 6
 	}
 

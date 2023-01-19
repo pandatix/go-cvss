@@ -662,29 +662,32 @@ func (cvss31 CVSS31) BaseScore() float64 {
 
 func (cvss31 CVSS31) Impact() float64 {
 	// directly lookup for variables without get -> improve performances by ~20%
-	c := cia_new(((cvss31.u0 & 0b00000001) << 1) | (cvss31.u1&0b10000000)>>7)
-	i := cia_new((cvss31.u1 & 0b01100000) >> 5)
-	a := cia_new((cvss31.u1 & 0b00011000) >> 3)
+	c := cia(((cvss31.u0 & 0b00000001) << 1) | (cvss31.u1&0b10000000)>>7)
+	i := cia((cvss31.u1 & 0b01100000) >> 5)
+	a := cia((cvss31.u1 & 0b00011000) >> 3)
 	iss := 1 - ((1 - c) * (1 - i) * (1 - a))
 	// shortcut to avoid get("S") -> improve performances by ~40%
 	if cvss31.u0&0b00000010 == 0 {
 		return 6.42 * iss
 	}
-	return 7.52*(iss-0.029) - 3.25*math.Pow(iss-0.02, 15)
+	return 7.52*(iss-0.029) - 3.25*pow15(iss-0.02)
 }
 
 func (cvss31 CVSS31) Exploitability() float64 {
 	// directly lookup for variables without get -> improve performances by ~20%
-	av := attackVector_new((cvss31.u0 & 0b11000000) >> 6)
-	ac := attackComplexity_new((cvss31.u0 & 0b00100000) >> 5)
-	pr := privilegesRequired_new((cvss31.u0&0b00011000)>>3, (cvss31.u0&0b00000010)>>1)
-	ui := userInteraction_new((cvss31.u0 & 0b00000100) >> 2)
+	av := attackVector((cvss31.u0 & 0b11000000) >> 6)
+	ac := attackComplexity((cvss31.u0 & 0b00100000) >> 5)
+	pr := privilegesRequired((cvss31.u0&0b00011000)>>3, (cvss31.u0&0b00000010)>>1)
+	ui := userInteraction((cvss31.u0 & 0b00000100) >> 2)
 	return 8.22 * av * ac * pr * ui
 }
 
 // TemporalScore returns the CVSS v3.1's temporal score.
 func (cvss31 CVSS31) TemporalScore() float64 {
-	return roundup(cvss31.BaseScore() * exploitCodeMaturity(cvss31.get("E")) * remediationLevel(cvss31.get("RL")) * reportConfidence(cvss31.get("RC")))
+	e := exploitCodeMaturity(cvss31.u1 & 0b00000111)
+	rl := remediationLevel((cvss31.u2 & 0b11100000) >> 5)
+	rc := reportConfidence((cvss31.u2 & 0b00011000) >> 3)
+	return roundup(cvss31.BaseScore() * e * rl * rc)
 }
 
 // EnvironmentalScore returns the CVSS v3.1's environmental score.
@@ -693,31 +696,37 @@ func (cvss31 CVSS31) EnvironmentalScore() float64 {
 	// It is based on first.org online calculator's source code,
 	// while it is not explicit in the specification which value
 	// to use.
-	mav := mod(cvss31.get("AV"), cvss31.get("MAV"))
-	mac := mod(cvss31.get("AC"), cvss31.get("MAC"))
-	mpr := mod(cvss31.get("PR"), cvss31.get("MPR"))
-	mui := mod(cvss31.get("UI"), cvss31.get("MUI"))
-	ms := mod(cvss31.get("S"), cvss31.get("MS"))
-	mc := mod(cvss31.get("C"), cvss31.get("MC"))
-	mi := mod(cvss31.get("I"), cvss31.get("MI"))
-	ma := mod(cvss31.get("A"), cvss31.get("MA"))
+	mav := mod((cvss31.u0&0b11000000)>>6, (cvss31.u3&0b00011100)>>2)
+	mac := mod((cvss31.u0&0b00100000)>>5, cvss31.u3&0b00000011)
+	mpr := mod((cvss31.u0&0b00011000)>>3, (cvss31.u4&0b11000000)>>6)
+	mui := mod((cvss31.u0&0b00000100)>>2, (cvss31.u4&0b00110000)>>4)
+	ms := mod((cvss31.u0&0b00000010)>>1, (cvss31.u4&0b00001100)>>2)
+	mc := mod(((cvss31.u0&0b00000001)<<1)|((cvss31.u1&0b10000000)>>7), cvss31.u4&0b00000011)
+	mi := mod((cvss31.u1&0b01100000)>>5, (cvss31.u5&0b11000000)>>6)
+	ma := mod((cvss31.u1&0b00011000)>>3, (cvss31.u5&0b00110000)>>4)
 
-	miss := math.Min(1-(1-ciar(cvss31.get("CR"))*cia(mc))*(1-ciar(cvss31.get("IR"))*cia(mi))*(1-ciar(cvss31.get("AR"))*cia(ma)), 0.915)
+	cr := ciar((cvss31.u2 & 0b00000110) >> 1)
+	ir := ciar(((cvss31.u2 & 0b00000001) << 1) | ((cvss31.u3 & 0b10000000) >> 7))
+	ar := ciar((cvss31.u3 & 0b01100000) >> 5)
+	e := exploitCodeMaturity(cvss31.u1 & 0b00000111)
+	rl := remediationLevel((cvss31.u2 & 0b11100000) >> 5)
+	rc := reportConfidence((cvss31.u2 & 0b00011000) >> 3)
+	miss := math.Min(1-(1-cr*cia(mc))*(1-ir*cia(mi))*(1-ar*cia(ma)), 0.915)
 	var modifiedImpact float64
-	if ms == "U" {
+	if ms == s_u {
 		modifiedImpact = 6.42 * miss
 	} else {
-		modifiedImpact = 7.52*(miss-0.029) - 3.25*math.Pow(miss*0.9731-0.02, 13)
+		modifiedImpact = 7.52*(miss-0.029) - 3.25*pow13(miss*0.9731-0.02)
 	}
 	modifiedExploitability := 8.22 * attackVector(mav) * attackComplexity(mac) * privilegesRequired(mpr, ms) * userInteraction(mui)
 	if modifiedImpact <= 0 {
 		return 0
 	}
-	if ms == "U" {
-		return roundup(roundup(math.Min(modifiedImpact+modifiedExploitability, 10)) * exploitCodeMaturity(cvss31.get("E")) * remediationLevel(cvss31.get("RL")) * reportConfidence(cvss31.get("RC")))
+	if ms == s_u {
+		return roundup(roundup(math.Min(modifiedImpact+modifiedExploitability, 10)) * e * rl * rc)
 	}
 	r := math.Min(1.08*(modifiedImpact+modifiedExploitability), 10)
-	return roundup(roundup(r) * exploitCodeMaturity(cvss31.get("E")) * remediationLevel(cvss31.get("RL")) * reportConfidence(cvss31.get("RC")))
+	return roundup(roundup(r) * e * rl * rc)
 }
 
 // Rating returns the verbose for a given rating.
@@ -745,22 +754,7 @@ func Rating(score float64) (string, error) {
 
 // Helpers to compute CVSS v3.1 scores
 
-func attackVector(v string) float64 {
-	switch v {
-	case "N":
-		return 0.85
-	case "A":
-		return 0.62
-	case "L":
-		return 0.55
-	case "P":
-		return 0.2
-	default:
-		panic(ErrInvalidMetricValue)
-	}
-}
-
-func attackVector_new(v uint8) float64 {
+func attackVector(v uint8) float64 {
 	switch v {
 	case av_n:
 		return 0.85
@@ -775,18 +769,7 @@ func attackVector_new(v uint8) float64 {
 	}
 }
 
-func attackComplexity(v string) float64 {
-	switch v {
-	case "L":
-		return 0.77
-	case "H":
-		return 0.44
-	default:
-		panic(ErrInvalidMetricValue)
-	}
-}
-
-func attackComplexity_new(v uint8) float64 {
+func attackComplexity(v uint8) float64 {
 	switch v {
 	case ac_l:
 		return 0.77
@@ -797,26 +780,7 @@ func attackComplexity_new(v uint8) float64 {
 	}
 }
 
-func privilegesRequired(v, scope string) float64 {
-	switch v {
-	case "N":
-		return 0.85
-	case "L":
-		if scope == "C" {
-			return 0.68
-		}
-		return 0.62
-	case "H":
-		if scope == "C" {
-			return 0.5
-		}
-		return 0.27
-	default:
-		panic(ErrInvalidMetricValue)
-	}
-}
-
-func privilegesRequired_new(v, scope uint8) float64 {
+func privilegesRequired(v, scope uint8) float64 {
 	switch v {
 	case pr_n:
 		return 0.85
@@ -835,18 +799,7 @@ func privilegesRequired_new(v, scope uint8) float64 {
 	}
 }
 
-func userInteraction(v string) float64 {
-	switch v {
-	case "N":
-		return 0.85
-	case "R":
-		return 0.62
-	default:
-		panic(ErrInvalidMetricValue)
-	}
-}
-
-func userInteraction_new(v uint8) float64 {
+func userInteraction(v uint8) float64 {
 	switch v {
 	case ui_n:
 		return 0.85
@@ -857,20 +810,7 @@ func userInteraction_new(v uint8) float64 {
 	}
 }
 
-func cia(v string) float64 {
-	switch v {
-	case "H":
-		return 0.56
-	case "L":
-		return 0.22
-	case "N":
-		return 0
-	default:
-		panic(ErrInvalidMetricValue)
-	}
-}
-
-func cia_new(v uint8) float64 {
+func cia(v uint8) float64 {
 	switch v {
 	case cia_h:
 		return 0.56
@@ -883,64 +823,56 @@ func cia_new(v uint8) float64 {
 	}
 }
 
-func exploitCodeMaturity(v string) float64 {
+func exploitCodeMaturity(v uint8) float64 {
 	switch v {
-	case "X":
+	case e_x, e_h:
 		return 1
-	case "H":
-		return 1
-	case "F":
+	case e_f:
 		return 0.97
-	case "P":
+	case e_p:
 		return 0.94
-	case "U":
+	case e_u:
 		return 0.91
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func remediationLevel(v string) float64 {
+func remediationLevel(v uint8) float64 {
 	switch v {
-	case "X":
+	case rl_x, rl_u:
 		return 1
-	case "U":
-		return 1
-	case "W":
+	case rl_w:
 		return 0.97
-	case "T":
+	case rl_t:
 		return 0.96
-	case "O":
+	case rl_o:
 		return 0.95
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func reportConfidence(v string) float64 {
+func reportConfidence(v uint8) float64 {
 	switch v {
-	case "X":
+	case rc_x, rc_c:
 		return 1
-	case "C":
-		return 1
-	case "R":
+	case rc_r:
 		return 0.96
-	case "U":
+	case rc_u:
 		return 0.92
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func ciar(v string) float64 {
+func ciar(v uint8) float64 {
 	switch v {
-	case "X":
+	case ciar_x, ciar_m:
 		return 1
-	case "H":
+	case ciar_h:
 		return 1.5
-	case "M":
-		return 1
-	case "L":
+	case ciar_l:
 		return 0.5
 	default:
 		panic(ErrInvalidMetricValue)
@@ -955,9 +887,22 @@ func roundup(x float64) float64 {
 	return (math.Floor(bx/10000) + 1) / 10.0
 }
 
-func mod(base, modified string) string {
-	if modified != "X" {
-		return modified
+func pow13(f float64) float64 {
+	f2 := f * f
+	f4 := f2 * f2
+	f12 := f4 * f4 * f4
+	return f * f12
+}
+
+func pow15(f float64) float64 {
+	return pow13(f) * f * f
+}
+
+func mod(base, modified uint8) uint8 {
+	// If "modified" is different of 0, it is different of "X"
+	// => shift to one before (skip X index)
+	if modified != 0 {
+		return modified - 1
 	}
 	return base
 }

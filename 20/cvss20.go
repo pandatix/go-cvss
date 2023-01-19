@@ -486,181 +486,188 @@ func (cvss20 CVSS20) BaseScore() float64 {
 }
 
 func (cvss20 CVSS20) Impact() float64 {
-	return 10.41 * (1 - (1-cia(cvss20.get("C")))*(1-cia(cvss20.get("I")))*(1-cia(cvss20.get("A"))))
+	c := cia(cvss20.u0 & 0b00000011)
+	i := cia((cvss20.u1 & 0b11000000) >> 6)
+	a := cia((cvss20.u1 & 0b00110000) >> 4)
+	return 10.41 * (1 - (1-c)*(1-i)*(1-a))
 }
 
 func (cvss20 CVSS20) Exploitability() float64 {
-	return 20 * accessVector(cvss20.get("AV")) * accessComplexity(cvss20.get("AC")) * authentication(cvss20.get("Au"))
+	av := accessVector((cvss20.u0 & 0b11000000) >> 6)
+	ac := accessComplexity((cvss20.u0 & 0b00110000) >> 4)
+	au := authentication((cvss20.u0 & 0b00001100) >> 2)
+	return 20 * av * ac * au
 }
 
 // TemporalScore returns the CVSS v2.0's temporal score.
 func (cvss20 CVSS20) TemporalScore() float64 {
-	return roundTo1Decimal(cvss20.BaseScore() * exploitability(cvss20.get("E")) * remediationLevel(cvss20.get("RL")) * reportConfidence(cvss20.get("RC")))
+	e := exploitability((cvss20.u1 & 0b00001110) >> 1)
+	rl := remediationLevel(((cvss20.u1 & 0b00000001) << 2) | ((cvss20.u2 & 0b11000000) >> 6))
+	rc := reportConfidence((cvss20.u2 & 0b00110000) >> 4)
+	return roundTo1Decimal(cvss20.BaseScore() * e * rl * rc)
 }
 
 // EnvironmentalScore returns the CVSS v2.0's environmental score.
 func (cvss20 CVSS20) EnvironmentalScore() float64 {
-	// Recompute base score
-	adjustedImpact := math.Min(10, 10.41*(1-(1-cia(cvss20.get("C"))*ciar(cvss20.get("CR")))*(1-cia(cvss20.get("I"))*ciar(cvss20.get("IR")))*(1-cia(cvss20.get("A"))*ciar(cvss20.get("AR")))))
+	c := cia(cvss20.u0 & 0b00000011)
+	i := cia((cvss20.u1 & 0b11000000) >> 6)
+	a := cia((cvss20.u1 & 0b00110000) >> 4)
+	cr := ciar((cvss20.u3 & 0b00110000) >> 4)
+	ir := ciar((cvss20.u3 & 0b00001100) >> 2)
+	ar := ciar(cvss20.u3 & 0b00000011)
+	adjustedImpact := math.Min(10, 10.41*(1-(1-c*cr)*(1-i*ir)*(1-a*ar)))
 	fimpactBase := 0.0
 	if adjustedImpact != 0 {
 		fimpactBase = 1.176
 	}
-	expltBase := 20 * accessVector(cvss20.get("AV")) * accessComplexity(cvss20.get("AC")) * authentication(cvss20.get("Au"))
+	expltBase := cvss20.Exploitability()
+	e := exploitability((cvss20.u1 & 0b00001110) >> 1)
+	rl := remediationLevel(((cvss20.u1 & 0b00000001) << 2) | ((cvss20.u2 & 0b11000000) >> 6))
+	rc := reportConfidence((cvss20.u2 & 0b00110000) >> 4)
 	recBase := roundTo1Decimal(((0.6 * adjustedImpact) + (0.4 * expltBase) - 1.5) * fimpactBase)
-	adjustedTemporal := roundTo1Decimal(recBase * exploitability(cvss20.get("E")) * remediationLevel(cvss20.get("RL")) * reportConfidence(cvss20.get("RC")))
-	return roundTo1Decimal((adjustedTemporal + (10-adjustedTemporal)*collateralDamagePotential(cvss20.get("CDP"))) * targetDistribution(cvss20.get("TD")))
+	adjustedTemporal := roundTo1Decimal(recBase * e * rl * rc)
+	cdp := collateralDamagePotential((cvss20.u2 & 0b00001110) >> 1)
+	td := targetDistribution(((cvss20.u2 & 0b00000001) << 2) | ((cvss20.u3 & 0b11000000) >> 6))
+	return roundTo1Decimal((adjustedTemporal + (10-adjustedTemporal)*cdp) * td)
 }
 
 // Helpers to compute CVSS v2.0 scores.
 
-func accessVector(v string) float64 {
+func accessVector(v uint8) float64 {
 	switch v {
-	case "L":
+	case av_l:
 		return 0.395
-	case "A":
+	case av_a:
 		return 0.646
-	case "N":
+	case av_n:
 		return 1.0
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func accessComplexity(v string) float64 {
+func accessComplexity(v uint8) float64 {
 	switch v {
-	case "H":
+	case ac_h:
 		return 0.35
-	case "M":
+	case ac_m:
 		return 0.61
-	case "L":
+	case ac_l:
 		return 0.71
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func authentication(v string) float64 {
+func authentication(v uint8) float64 {
 	switch v {
-	case "M":
+	case au_m:
 		return 0.45
-	case "S":
+	case au_s:
 		return 0.56
-	case "N":
+	case au_n:
 		return 0.704
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func cia(v string) float64 {
+func cia(v uint8) float64 {
 	switch v {
-	case "N":
+	case cia_n:
 		return 0.0
-	case "P":
+	case cia_p:
 		return 0.275
-	case "C":
+	case cia_c:
 		return 0.660
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func exploitability(v string) float64 {
+func exploitability(v uint8) float64 {
 	switch v {
-	case "U":
+	case e_u:
 		return 0.85
-	case "POC":
+	case e_poc:
 		return 0.9
-	case "F":
+	case e_f:
 		return 0.95
-	case "H":
-		return 1.00
-	case "ND":
+	case e_h, e_nd:
 		return 1.00
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func remediationLevel(v string) float64 {
+func remediationLevel(v uint8) float64 {
 	switch v {
-	case "OF":
+	case rl_of:
 		return 0.87
-	case "TF":
+	case rl_tf:
 		return 0.90
-	case "W":
+	case rl_w:
 		return 0.95
-	case "U":
-		return 1.00
-	case "ND":
+	case rl_u, rl_nd:
 		return 1.00
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func reportConfidence(v string) float64 {
+func reportConfidence(v uint8) float64 {
 	switch v {
-	case "UC":
+	case rc_uc:
 		return 0.90
-	case "UR":
+	case rc_ur:
 		return 0.95
-	case "C":
-		return 1.00
-	case "ND":
+	case rc_c, rc_nd:
 		return 1.00
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func collateralDamagePotential(v string) float64 {
+func collateralDamagePotential(v uint8) float64 {
 	switch v {
-	case "N":
+	case cdp_n, cdp_nd:
 		return 0
-	case "L":
+	case cdp_l:
 		return 0.1
-	case "LM":
+	case cdp_lm:
 		return 0.3
-	case "MH":
+	case cdp_mh:
 		return 0.4
-	case "H":
+	case cdp_h:
 		return 0.5
-	case "ND":
-		return 0
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func targetDistribution(v string) float64 {
+func targetDistribution(v uint8) float64 {
 	switch v {
-	case "N":
+	case td_n:
 		return 0
-	case "L":
+	case td_l:
 		return 0.25
-	case "M":
+	case td_m:
 		return 0.75
-	case "H":
-		return 1.00
-	case "ND":
+	case td_h, td_nd:
 		return 1.00
 	default:
 		panic(ErrInvalidMetricValue)
 	}
 }
 
-func ciar(v string) float64 {
+func ciar(v uint8) float64 {
 	switch v {
-	case "L":
+	case ciar_l:
 		return 0.5
-	case "M":
+	case ciar_m, ciar_nd:
 		return 1.0
-	case "H":
+	case ciar_h:
 		return 1.51
-	case "ND":
-		return 1.0
 	default:
 		panic(ErrInvalidMetricValue)
 	}

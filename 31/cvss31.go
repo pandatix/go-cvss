@@ -661,7 +661,11 @@ func (cvss31 CVSS31) BaseScore() float64 {
 }
 
 func (cvss31 CVSS31) Impact() float64 {
-	iss := 1 - ((1 - cia(cvss31.get("C"))) * (1 - cia(cvss31.get("I"))) * (1 - cia(cvss31.get("A"))))
+	// directly lookup for variables without get -> improve performances by ~20%
+	c := cia_new(((cvss31.u0 & 0b00000001) << 1) | (cvss31.u1&0b10000000)>>7)
+	i := cia_new((cvss31.u1 & 0b01100000) >> 5)
+	a := cia_new((cvss31.u1 & 0b00011000) >> 3)
+	iss := 1 - ((1 - c) * (1 - i) * (1 - a))
 	// shortcut to avoid get("S") -> improve performances by ~40%
 	if cvss31.u0&0b00000010 == 0 {
 		return 6.42 * iss
@@ -670,7 +674,12 @@ func (cvss31 CVSS31) Impact() float64 {
 }
 
 func (cvss31 CVSS31) Exploitability() float64 {
-	return 8.22 * attackVector(cvss31.get("AV")) * attackComplexity(cvss31.get("AC")) * privilegesRequired(cvss31.get("PR"), cvss31.get("S")) * userInteraction(cvss31.get("UI"))
+	// directly lookup for variables without get -> improve performances by ~20%
+	av := attackVector_new((cvss31.u0 & 0b11000000) >> 6)
+	ac := attackComplexity_new((cvss31.u0 & 0b00100000) >> 5)
+	pr := privilegesRequired_new((cvss31.u0&0b00011000)>>3, (cvss31.u0&0b00000010)>>1)
+	ui := userInteraction_new((cvss31.u0 & 0b00000100) >> 2)
+	return 8.22 * av * ac * pr * ui
 }
 
 // TemporalScore returns the CVSS v3.1's temporal score.
@@ -751,11 +760,37 @@ func attackVector(v string) float64 {
 	}
 }
 
+func attackVector_new(v uint8) float64 {
+	switch v {
+	case av_n:
+		return 0.85
+	case av_a:
+		return 0.62
+	case av_l:
+		return 0.55
+	case av_p:
+		return 0.2
+	default:
+		panic(ErrInvalidMetricValue)
+	}
+}
+
 func attackComplexity(v string) float64 {
 	switch v {
 	case "L":
 		return 0.77
 	case "H":
+		return 0.44
+	default:
+		panic(ErrInvalidMetricValue)
+	}
+}
+
+func attackComplexity_new(v uint8) float64 {
+	switch v {
+	case ac_l:
+		return 0.77
+	case ac_h:
 		return 0.44
 	default:
 		panic(ErrInvalidMetricValue)
@@ -781,11 +816,41 @@ func privilegesRequired(v, scope string) float64 {
 	}
 }
 
+func privilegesRequired_new(v, scope uint8) float64 {
+	switch v {
+	case pr_n:
+		return 0.85
+	case pr_l:
+		if scope == s_c {
+			return 0.68
+		}
+		return 0.62
+	case pr_h:
+		if scope == s_c {
+			return 0.5
+		}
+		return 0.27
+	default:
+		panic(ErrInvalidMetricValue)
+	}
+}
+
 func userInteraction(v string) float64 {
 	switch v {
 	case "N":
 		return 0.85
 	case "R":
+		return 0.62
+	default:
+		panic(ErrInvalidMetricValue)
+	}
+}
+
+func userInteraction_new(v uint8) float64 {
+	switch v {
+	case ui_n:
+		return 0.85
+	case ui_r:
 		return 0.62
 	default:
 		panic(ErrInvalidMetricValue)
@@ -799,6 +864,19 @@ func cia(v string) float64 {
 	case "L":
 		return 0.22
 	case "N":
+		return 0
+	default:
+		panic(ErrInvalidMetricValue)
+	}
+}
+
+func cia_new(v uint8) float64 {
+	switch v {
+	case cia_h:
+		return 0.56
+	case cia_l:
+		return 0.22
+	case cia_n:
 		return 0
 	default:
 		panic(ErrInvalidMetricValue)

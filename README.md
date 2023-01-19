@@ -133,11 +133,12 @@ Indeed, this has been highly optimised, so the code is no longer easily readable
 
 Before continuing, the optimizations discussed later goes against the [Knuth's words](https://web.archive.org/web/20210425190711if_/https://pic.plover.com/knuth-GOTO.pdf), but the maintenance is **our** problem, and the impacts in your code base is major for the best.
 
-There is four major parts in this optimizations:
+There is five major parts in this optimizations:
  1. **on-the-fly parsing** when parsing v3 vectors, meaning no buffer have to be used when parsing one. This mainly reduces the allocs/op indicator for the function that did most allocations.
  2. **buffer reuse** and share when parsing v2 vectors, using a `sync.Pool` of a predetermined buffer size. This reduces the allocs/op indicator for the v2 parsing function for the second function that did most allocations.
  3. **allocate-once buffer**, so that the vectorizing function counts what memory it will need then allocates and fill it. This mainly reduces the allocs/op indicator for the vectorizing function. At this step, we are at 0-1 allocs/op, but still at 352 B/op for parsing and 92 B/op for vectorizing (for v3, but the same applies to v2).
  4. **information theory based optimizations**, with focus on each bit usage. This is detailed next. This finally reduces the B/op indicator, leading to an highily optimized module.
+ 5. **cpu instructions optimizations** based on the previous. The idea is to avoid dealing with strings whenever possible and use bits. Indeed, a CPU has a native support of binary operations, while comparing strings does not (i.e. `cmpstr` take multiple cycles, but a binary shift takes one). This reduces the n/op indicator.
 
 Fortunately, those optimizations always improved (or did not affect drastically) the ns/op indicator, so no balance had to be considered. The only balance was making our job hard so yours is better.
 

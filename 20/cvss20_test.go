@@ -97,6 +97,16 @@ var testsParseVector = map[string]struct {
 		ExpectedCVSS20: nil,
 		ExpectedErr:    ErrInvalidMetricOrder,
 	},
+	"CVE-2022-39213": {
+		Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:C/E:U/RL:OF/RC:C/CDP:MH/TD:H/CR:M/IR:M/AR:M",
+		ExpectedCVSS20: &CVSS20{
+			u0: 0b10001001,
+			u1: 0b01100010,
+			u2: 0b01111001,
+			u3: 0b00101010,
+		},
+		ExpectedErr: nil,
+	},
 }
 
 func TestParseVector(t *testing.T) {

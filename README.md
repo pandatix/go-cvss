@@ -81,15 +81,15 @@ We challenge any other Go implementation to do better :stuck_out_tongue_winking_
 goos: linux
 goarch: amd64
 pkg: github.com/pandatix/go-cvss/20
-cpu: Intel(R) Core(TM) i7-8086K CPU @ 4.00GHz
-BenchmarkParseVector_Base-12                 4747413           229.6 ns/op         4 B/op          1 allocs/op
-BenchmarkParseVector_WithTempAndEnv-12       2133370           534.0 ns/op         4 B/op          1 allocs/op
-BenchmarkCVSS20Vector-12                     4111411           277.7 ns/op        80 B/op          1 allocs/op
-BenchmarkCVSS20Get-12                      133722070           8.228 ns/op         0 B/op          0 allocs/op
-BenchmarkCVSS20Set-12                       81166387           13.80 ns/op         0 B/op          0 allocs/op
-BenchmarkCVSS20BaseScore-12                 21431910           51.54 ns/op         0 B/op          0 allocs/op
-BenchmarkCVSS20TemporalScore-12             13616814           93.52 ns/op         0 B/op          0 allocs/op
-BenchmarkCVSS20EnvironmentalScore-12         9342294           129.4 ns/op         0 B/op          0 allocs/op
+cpu: Intel(R) Core(TM) i5-2450M CPU @ 2.50GHz
+BenchmarkParseVector_Base-4                  2635287           455.0 ns/op         4 B/op          1 allocs/op
+BenchmarkParseVector_WithTempAndEnv-4         981721            1035 ns/op         4 B/op          1 allocs/op
+BenchmarkCVSS20Vector-4                      1605918           632.4 ns/op        80 B/op          1 allocs/op
+BenchmarkCVSS20Get-4                        68448986           17.32 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS20Set-4                        45166622           27.03 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS20BaseScore-4                  61978450           19.25 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS20TemporalScore-4              31636566           34.57 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS20EnvironmentalScore-4         20828653           56.03 ns/op         0 B/op          0 allocs/op
 ```
 
 ### CVSS v3.0
@@ -98,15 +98,15 @@ BenchmarkCVSS20EnvironmentalScore-12         9342294           129.4 ns/op      
 goos: linux
 goarch: amd64
 pkg: github.com/pandatix/go-cvss/30
-cpu: Intel(R) Core(TM) i7-8086K CPU @ 4.00GHz
-BenchmarkParseVector_Base-12                 3907210           261.5 ns/op         8 B/op          1 allocs/op
-BenchmarkParseVector_WithTempAndEnv-12       1847614           603.4 ns/op         8 B/op          1 allocs/op
-BenchmarkCVSS30Vector-12                     2339077           458.5 ns/op        96 B/op          1 allocs/op
-BenchmarkCVSS30Get-12                       93460929           12.16 ns/op         0 B/op          0 allocs/op
-BenchmarkCVSS30Set-12                       64881668           17.69 ns/op         0 B/op          0 allocs/op
-BenchmarkCVSS30BaseScore-12                  9224724           123.2 ns/op         0 B/op          0 allocs/op
-BenchmarkCVSS30TemporalScore-12              6468423           176.5 ns/op         0 B/op          0 allocs/op
-BenchmarkCVSS30EnvironmentalScore-12         4008021           307.8 ns/op         0 B/op          0 allocs/op
+cpu: Intel(R) Core(TM) i5-2450M CPU @ 2.50GHz
+BenchmarkParseVector_Base-4                  2175715           514.0 ns/op         8 B/op          1 allocs/op
+BenchmarkParseVector_WithTempAndEnv-4         879648            1186 ns/op         8 B/op          1 allocs/op
+BenchmarkCVSS30Vector-4                      1723250           825.3 ns/op        96 B/op          1 allocs/op
+BenchmarkCVSS30Get-4                        44361453           25.36 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS30Set-4                        34609831           36.39 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS30BaseScore-4                  32572166           37.33 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS30TemporalScore-4              16464278           72.51 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS30EnvironmentalScore-4         14459524           76.09 ns/op         0 B/op          0 allocs/op
 ```
 
 ### CVSS v3.1
@@ -115,15 +115,15 @@ BenchmarkCVSS30EnvironmentalScore-12         4008021           307.8 ns/op      
 goos: linux
 goarch: amd64
 pkg: github.com/pandatix/go-cvss/31
-cpu: Intel(R) Core(TM) i7-8086K CPU @ 4.00GHz
-BenchmarkParseVector_Base-12                 3851694           265.5 ns/op         8 B/op          1 allocs/op
-BenchmarkParseVector_WithTempAndEnv-12       1682426           687.1 ns/op         8 B/op          1 allocs/op
-BenchmarkCVSS31Vector-12                     2459060           472.3 ns/op        96 B/op          1 allocs/op
-BenchmarkCVSS31Get-12                       83839993           13.21 ns/op         0 B/op          0 allocs/op
-BenchmarkCVSS31Set-12                       67924599           18.03 ns/op         0 B/op          0 allocs/op
-BenchmarkCVSS31BaseScore-12                  9429159           136.5 ns/op         0 B/op          0 allocs/op
-BenchmarkCVSS31TemporalScore-12              5164994           214.0 ns/op         0 B/op          0 allocs/op
-BenchmarkCVSS31EnvironmentalScore-12         3830241           315.4 ns/op         0 B/op          0 allocs/op
+cpu: Intel(R) Core(TM) i5-2450M CPU @ 2.50GHz
+BenchmarkParseVector_Base-4                  2465984           487.7 ns/op         8 B/op          1 allocs/op
+BenchmarkParseVector_WithTempAndEnv-4        1059848            1248 ns/op         8 B/op          1 allocs/op
+BenchmarkCVSS31Vector-4                      1276906           910.4 ns/op        96 B/op          1 allocs/op
+BenchmarkCVSS31Get-4                        40836300           25.25 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS31Set-4                        31707997           35.68 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS31BaseScore-4                  31108681           39.70 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS31TemporalScore-4              15552028           73.01 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS31EnvironmentalScore-4         13541654           79.26 ns/op         0 B/op          0 allocs/op
 ```
 
 ### How it works
@@ -171,10 +171,6 @@ Benchmarks results for CVSS v3.
 <div align="center">
 	<img src="res/benchmarks-results-cvss-v3.png">
 </div>
-
-Based on those results, we can see that this implementation does not scores best for each metric, but the overall shows **it is better than others at parsing and vectorizing**. As those are the core of this Go module API, with support and compliance of both v2 and v3, we consider our Go module better to use.
-
-The _poor_ results of `BaseScore` is due to the internal optimizations that takes more cycles to fetch the values, but the time efficiency is still gigantic (between 10 and 30 ns/op in our experiment).
 
 ## Feedbacks
 

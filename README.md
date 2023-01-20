@@ -131,7 +131,7 @@ BenchmarkCVSS31EnvironmentalScore-4         13541654           79.26 ns/op      
 If you are looking at the internals, you'll see it's hard to read.
 Indeed, this has been highly optimised, so the code is no longer easily readable.
 
-Before continuing, the optimizations discussed later goes against the [Knuth's words](https://web.archive.org/web/20210425190711if_/https://pic.plover.com/knuth-GOTO.pdf), but the maintenance is **our** problem, and the impacts in your code base is major for the best.
+Before continuing, the optimizations discussed later goes against the [Knuth's words](https://pic.plover.com/knuth-GOTO.pdf), but the maintenance is **our** problem, and the impacts in your code base is major for the best.
 
 There is five major parts in this optimizations:
  1. **on-the-fly parsing** when parsing v3 vectors, meaning no buffer have to be used when parsing one. This mainly reduces the allocs/op indicator for the function that did most allocations.

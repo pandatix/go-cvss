@@ -21,6 +21,7 @@ It won't support CVSS v1.0, as despite it was a good CVSS start, it can't get ve
 ## Summary
 
  - [How to use](#how-to-use)
+ - [How it was built](#how-it-was-built)
  - [A word on performances](#a-word-on-performances)
    - [CVSS v2.0](#cvss-v20)
    - [CVSS v3.0](#cvss-v30)
@@ -63,6 +64,14 @@ func main() {
 	// Prints "5.4 MEDIUM"
 }
 ```
+
+## How it was built
+
+This Go module was built using an iterative methodology. The outline is represented by the following diagram.
+
+<div align="center" width="800px">
+	<img src="res/dev-pipeline.png">
+</div>
 
 ## A word on performances
 

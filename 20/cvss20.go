@@ -45,7 +45,7 @@ func ParseVector(vector string) (*CVSS20, error) {
 				tgt = order[2][0]
 			}
 		default:
-			return nil, &ErrDefinedN{Abv: abv}
+			return nil, ErrInvalidMetricValue
 		}
 		if abv != tgt {
 			return nil, ErrInvalidMetricOrder

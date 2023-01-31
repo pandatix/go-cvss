@@ -63,6 +63,16 @@ var testsParseVector = map[string]struct {
 		},
 		ExpectedErr: nil,
 	},
+	"invalid-last-metric": {
+		Vector:         "AV:A/AC:L/Au:N/C:C/I:C/A:C/CDP:H/TD:H/CR:H/IR:ND/AR:H/",
+		ExpectedCVSS20: nil,
+		ExpectedErr:    ErrInvalidMetricValue,
+	},
+	"invalid-metric-value": {
+		Vector:         "AV:L/AC:L/Au:M/C:InVaLiD/I:P/A:N",
+		ExpectedCVSS20: nil,
+		ExpectedErr:    ErrInvalidMetricValue,
+	},
 	"Fuzz_b0c5c63b20b726efad1741c656ed3c1f9ee8c5dc00bb9c938f3e01d11153d51f": {
 		// This fuzz crashers enabled detecting that a CVSS v2.0 vector
 		// with not any temporal metric defined but some environmental ones

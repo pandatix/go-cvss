@@ -59,6 +59,16 @@ var testsParseVector = map[string]struct {
 		},
 		ExpectedErr: nil,
 	},
+	"invalid-header": {
+		Vector:         "Something that does not start with CVSS:3.0",
+		ExpectedCVSS30: nil,
+		ExpectedErr:    ErrInvalidCVSSHeader,
+	},
+	"invalid-metric-value": {
+		Vector:         "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:InVaLiD/C:N/I:H/A:N",
+		ExpectedCVSS30: nil,
+		ExpectedErr:    ErrInvalidMetricValue,
+	},
 }
 
 func TestParseVector(t *testing.T) {

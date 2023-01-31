@@ -165,6 +165,8 @@ We are aware that this could still be improved as we could transitively state th
 This imply that CVSS v2 implementation can't be improved by this process.
 Nevertheless, this has been judged over-optimizations for now, but a motivated developer may do it for a cookie :laughing:
 
+Lastly, for the focused reader, as CVSS v3 vectors don't have to be ordered (CVSS v2 does in its specification document Section 2.4), there are many more possible combinations, and as temporal and environmental metrics are not mandatory, representing all the possibilities with an integer identifier would take many more bits and so bytes. Our approach is trusted better in this way.
+
 ### Comparison
 
 The following are the results of the comparison with others Go CVSS implementations, based on its own [benchmarking suite](./benchmarks).

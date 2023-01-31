@@ -28,6 +28,7 @@ It won't support CVSS v1.0, as despite it was a good CVSS start, it can't get ve
    - [CVSS v3.1](#cvss-v31)
    - [How it works](#how-it-works)
    - [Comparison](#comparison)
+ - [Differential fuzzing](#differential-fuzzing)
  - [Feedbacks](#feedbacks)
    - [CVSS v2.0](#cvss-v20-1)
    - [CVSS v3.0](#cvss-v30-1)
@@ -180,6 +181,38 @@ Benchmarks results for CVSS v3.
 <div align="center">
 	<img src="res/benchmarks-results-cvss-v3.png">
 </div>
+
+---
+
+## Differential fuzzing
+
+Using [differential fuzzing](./differential), we were able to detect various bugs and vulnerabilities.
+
+Bug trophy list:
+ - [`github.com/goark/go-cvss` #10](https://github.com/goark/go-cvss/issues/10) Improper Input Validation in CVSS v3 parsing
+ - [`github.com/goark/go-cvss` #13](https://github.com/goark/go-cvss/issues/13) Another Improper Input Validation in CVSS v3 parsing
+ - [`github.com/goark/go-cvss` #15](https://github.com/goark/go-cvss/issues/15) One more Improper Input Validation in CVSS v3 parsing
+ - [`github.com/goark/go-cvss` #18](https://github.com/goark/go-cvss/issues/18) Invalid CVSS v3 environmental score computation
+ - [`github.com/goark/go-cvss` #21](https://github.com/goark/go-cvss/issues/21) Improper Input Validation in CVSS v2 parsing
+ - [`github.com/goark/go-cvss` #23](https://github.com/goark/go-cvss/issues/23) Invalid CVSS v2 vector
+ - [`github.com/goark/go-cvss` #26](https://github.com/goark/go-cvss/issues/26) Improper Input Validation in CVSS v2 parsing
+ - [`github.com/goark/go-cvss` #28](https://github.com/goark/go-cvss/issues/28) Another Improper Input Validation in CVSS v2 parsing
+ - [`github.com/facebookincubator/nvdtools` #202](https://github.com/facebookincubator/nvdtools/issues/202) Improper Input Validation in CVSS v3 parsing
+ - [`github.com/facebookincubator/nvdtools` #203](https://github.com/facebookincubator/nvdtools/issues/203) Improper Input Validation in CVSS v2 parsing
+ - [`github.com/facebookincubator/nvdtools` #204](https://github.com/facebookincubator/nvdtools/issues/204) Invalid CVSS v2 environmental score computation
+ - [`github.com/umisama/go-cvss` #1](https://github.com/umisama/go-cvss/issues/1) Improper Input Validation on CVSS v2 parsing
+ - [`github.com/umisama/go-cvss` #2](https://github.com/umisama/go-cvss/issues/2) Improper CVSS v2 environmental score computation
+ - [`github.com/attwad/gocvss` #1](https://github.com/attwad/gocvss/issues/1) Invalid CVSS v2 vector output
+ - [`github.com/attwad/gocvss` #2](https://github.com/attwad/gocvss/issues/2) Improper Input Validation in CVSS v2 parsing
+ - [`github.com/attwad/gocvss` #3](https://github.com/attwad/gocvss/issues/3) Invalid CVSS v2 environmental score computation
+ - [`go.zenithar.org/mitre` #1](https://github.com/zntrio/mitre/issues/1) Improper Input Validation in CVSS v2 parsing
+ - [`github.com/bunji2/cvssv3` #2](https://github.com/bunji2/cvssv3/issues/2) Invalid CVSS v3 score computation
+ - [`github.com/bunji2/cvssv3` #3](https://github.com/bunji2/cvssv3/issues/3) Improper Input Validation in CVSS v3 parsing
+
+Vulnerability trophy list:
+ - [`github.com/facebookincubator/nvdtools` #201](https://github.com/facebookincubator/nvdtools/pull/201) Fix crash on malformed input in ParseCVSSVector
+
+---
 
 ## Feedbacks
 

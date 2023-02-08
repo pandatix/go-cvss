@@ -676,5 +676,5 @@ func ciar(v uint8) float64 {
 // this helper is not specified, so we literally round the value
 // to 1 decimal.
 func roundTo1Decimal(x float64) float64 {
-	return math.RoundToEven(x*10) / 10
+	return math.Round(x*10) / 10
 }

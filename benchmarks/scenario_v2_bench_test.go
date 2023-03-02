@@ -5,12 +5,12 @@ import (
 
 	attwad "github.com/attwad/gocvss"
 	facebook2 "github.com/facebookincubator/nvdtools/cvss2"
-	goark2 "github.com/goark/go-cvss/v2"
+	goark2 "github.com/goark/go-cvss/v2/metric"
 	pandatix20 "github.com/pandatix/go-cvss/20"
 	slimsec "github.com/slimsec/cvss"
 	umisama "github.com/umisama/go-cvss"
-	zntrioVec2 "go.zenithar.org/mitre/pkg/protocol/mitre/cvss/v2"
-	zntrio2 "go.zenithar.org/mitre/pkg/services/cvss/v2/vector"
+	zntrioVec2 "github.com/zntrio/mitre/api/mitre/cvss/v2"
+	zntrio2 "github.com/zntrio/mitre/cvss/v2/vector"
 )
 
 const (
@@ -48,10 +48,10 @@ func Benchmark_V2_ParseVector(b *testing.B) {
 	b.Run("goark/go-cvss", func(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
-			var vec = goark2.New()
+			var vec = goark2.NewEnvironmental()
 			var err error
 			for pb.Next() {
-				err = vec.ImportBaseVector(cvss20vector)
+				_, err = vec.Decode(cvss20vector)
 			}
 			GgoarkVec2 = vec
 			Gerr = err
@@ -195,8 +195,7 @@ func Benchmark_V2_BaseScore(b *testing.B) {
 	})
 	// bunji2/cvssv3 can't handle CVSS v2
 	b.Run("goark/go-cvss", func(b *testing.B) {
-		vec := goark2.New()
-		_ = vec.ImportBaseVector(cvss20vector)
+		vec, _ := goark2.NewEnvironmental().Decode(cvss20vector)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			var f float64
@@ -235,7 +234,7 @@ func Benchmark_V2_BaseScore(b *testing.B) {
 
 var (
 	GpandatixVec2 *pandatix20.CVSS20
-	GgoarkVec2    *goark2.CVSS
+	GgoarkVec2    *goark2.Environmental
 	GumisamaVec2  umisama.Vectors
 	GfacebookVec2 facebook2.Vector
 	Gzntrio2Vec   *zntrioVec2.Vector

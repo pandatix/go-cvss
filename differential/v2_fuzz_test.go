@@ -8,7 +8,7 @@ import (
 	goark2 "github.com/goark/go-cvss/v2/metric"
 	gocvss20 "github.com/pandatix/go-cvss/20"
 	umisama "github.com/umisama/go-cvss"
-	zntrio "go.zenithar.org/mitre/pkg/services/cvss/v2/vector"
+	zntrio "github.com/zntrio/mitre/cvss/v2/vector"
 )
 
 func v2corpus(f *testing.F) {
@@ -87,7 +87,7 @@ func FuzzDifferential_V2_Zntrio(f *testing.F) {
 		vec2, err2 := zntrio.FromString(raw)
 
 		if (err1 != nil) != (err2 != nil) {
-			t.Fatalf("For vector %s, github.com/pandatix/go-cvss raised error \"%v\" and go.zenithar.org/mitre \"%v\"", raw, err1, err2)
+			t.Fatalf("For vector %s, github.com/pandatix/go-cvss raised error \"%v\" and github.com/zntrio/mitre/mitre \"%v\"", raw, err1, err2)
 		}
 		if err1 != nil || err2 != nil {
 			return
@@ -96,13 +96,13 @@ func FuzzDifferential_V2_Zntrio(f *testing.F) {
 		outVec1 := vec1.Vector()
 		outVec2, err := zntrio.ToString(vec2)
 		if err != nil {
-			t.Fatalf("For vector %s, go.zenithar.org/mitre raised error \"%s\" when vectorizing", raw, err)
+			t.Fatalf("For vector %s, github.com/zntrio/mitre/mitre raised error \"%s\" when vectorizing", raw, err)
 		}
 		if outVec1 != outVec2 {
-			t.Fatalf("For vector %s, github.com/pandatix/go-cvss vectorized %s and go.zenithar.org/mitre %s", raw, outVec1, outVec2)
+			t.Fatalf("For vector %s, github.com/pandatix/go-cvss vectorized %s and github.com/zntrio/mitre/mitre %s", raw, outVec1, outVec2)
 		}
 
-		// go.zenithar.org does not handle CVSS v2 scoring
+		// github.com/zntrio/mitre does not handle CVSS v2 scoring
 	})
 }
 

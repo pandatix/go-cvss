@@ -1,14 +1,19 @@
-# Go-CVSS
-
-[![reference](https://godoc.org/github.com/pandatix/go-cvss/v5?status.svg=)](https://pkg.go.dev/github.com/pandatix/go-cvss)
-[![go report](https://goreportcard.com/badge/github.com/pandatix/go-cvss)](https://goreportcard.com/report/github.com/pandatix/go-cvss)
-[![Coverage Status](https://coveralls.io/repos/github/pandatix/go-cvss/badge.svg?branch=main)](https://coveralls.io/github/pandatix/go-cvss?branch=main)
-[![CI](https://github.com/pandatix/go-cvss/actions/workflows/ci.yaml/badge.svg)](https://github.com/pandatix/go-cvss/actions?query=workflow%3Aci+)
-[![CodeQL](https://github.com/pandatix/go-cvss/actions/workflows/codeql-analysis.yaml/badge.svg)](https://github.com/pandatix/go-cvss/actions/workflows/codeql-analysis.yaml)
+<div align="center">
+	<h1>Go-CVSS</h1>
+	<a href="https://pkg.go.dev/github.com/pandatix/go-cvss"><img src="https://shields.io/badge/-reference-blue?logo=go&style=for-the-badge" alt="reference"></a>
+	<a href="https://goreportcard.com/report/github.com/pandatix/go-cvss"><img src="https://goreportcard.com/badge/github.com/pandatix/go-cvss?style=for-the-badge" alt="go report"></a>
+	<a href="https://coveralls.io/github/pandatix/go-cvss?branch=main"><img src="https://img.shields.io/coverallsCoverage/github/pandatix/go-cvss?style=for-the-badge" alt="Coverage Status"></a>
+	<a href=""><img src="https://img.shields.io/github/license/pandatix/go-cvss?style=for-the-badge" alt="License"></a>
+	<br>
+	<a href="https://github.com/pandatix/go-cvss/actions?query=workflow%3Aci+"><img src="https://img.shields.io/github/actions/workflow/status/pandatix/go-cvss/ci.yaml?style=for-the-badge" alt="CI"></a>
+	<a href="https://github.com/pandatix/go-cvss/actions/workflows/codeql-analysis.yaml"><img src="https://img.shields.io/github/actions/workflow/status/pandatix/go-cvss/codeql-analysis.yaml?style=for-the-badge" alt="CodeQL"></a>
+</div>
 
 Go-CVSS is a blazing-fast, low allocations and small memory-usage Go module made to manipulate Common Vulnerability Scoring System (CVSS).
 
-Specified by [first.org](https://www.first.org/cvss/), the CVSS provides a way to capture the principal characteristics of a vulnerability and produce a numerical score reflecting its severity.
+> **Note**
+>
+> Specified by [first.org](https://www.first.org/cvss/), the CVSS provides a way to capture the principal characteristics of a vulnerability and produce a numerical score reflecting its severity.
 
 It currently supports :
  - [X] [CVSS 2.0](https://www.first.org/cvss/v2/guide)
@@ -16,7 +21,9 @@ It currently supports :
  - [X] [CVSS 3.1](https://www.first.org/cvss/v3.1/specification-document)
  - [ ] CVSS 4.0 (currently not published)
 
-It won't support CVSS v1.0, as despite it was a good CVSS start, it can't get vectorized, abbreviations and enumerations are not strongly specified, so the cohesion and interoperability can't be satisfied.
+> **Warning**
+>
+> It won't support CVSS v1.0, as despite it was a good CVSS start, it can't get vectorized, abbreviations and enumerations are not strongly specified, so the cohesion and interoperability can't be satisfied.
 
 ## Summary
 

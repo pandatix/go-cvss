@@ -75,7 +75,7 @@ func main() {
 
 ## How it was built
 
-This Go module was built using an iterative methodology. The outline is represented by the following diagram.
+This Go module was built iteratively through time, and is represented by the following flow diagram.
 
 <div align="center" width="800px">
 	<img src="res/dev-pipeline.png">
@@ -86,8 +86,8 @@ This Go module was built using an iterative methodology. The outline is represen
 We are aware that manipulating a CVSS object does not provide the most value to your business needs.
 This is why we paid a big attention to the performances of this module.
 
-What we made is making this module **0 to 1 allocs/op** for the whole API.
-This reduces drastically the pressure on the Garbage Collector, without cutting through security (fuzzing ensures the API does not contain obvious security issues). It also reduces the time and bytes per operation to a really acceptable level.
+What we made is making this module **0 to 1 _allocs/op_** for the whole API.
+This reduces drastically the pressure on the _Garbage Collector_, without cutting through security (fuzzing ensures the API does not contain security issues). It also reduces the time and bytes per operation to a really acceptable level.
 
 The following shows the performances results.
 We challenge any other Go implementation to do better :stuck_out_tongue_winking_eye:
@@ -151,28 +151,27 @@ Indeed, this has been highly optimised, so the code is no longer easily readable
 Before continuing, the optimizations discussed later goes against the [Knuth's words](https://pic.plover.com/knuth-GOTO.pdf), but the maintenance is **our** problem, and the impacts in your code base is major for the best.
 
 There is five major parts in this optimizations:
- 1. **on-the-fly parsing** when parsing v3 vectors, meaning no buffer have to be used when parsing one. This mainly reduces the allocs/op indicator for the function that did most allocations.
- 2. **buffer reuse** and share when parsing v2 vectors, using a `sync.Pool` of a predetermined buffer size. This reduces the allocs/op indicator for the v2 parsing function for the second function that did most allocations.
- 3. **allocate-once buffer**, so that the vectorizing function counts what memory it will need then allocates and fill it. This mainly reduces the allocs/op indicator for the vectorizing function. At this step, we are at 0-1 allocs/op, but still at 352 B/op for parsing and 92 B/op for vectorizing (for v3, but the same applies to v2).
- 4. **information theory based optimizations**, with focus on each bit usage. This is detailed next. This finally reduces the B/op indicator, leading to an highily optimized module.
- 5. **cpu instructions optimizations** based on the previous. The idea is to avoid dealing with strings whenever possible and use bits. Indeed, a CPU has a native support of binary operations, while comparing strings does not (i.e. `cmpstr` take multiple cycles, but a binary shift takes one). This reduces the n/op indicator.
+ 1. **on-the-fly parsing** when parsing v3 vectors, meaning no buffer have to be used when parsing one. This mainly reduces the _allocs/op_ indicator for the function that did most allocations.
+ 2. **buffer reuse** and share when parsing v2 vectors, using a `sync.Pool` of a predetermined buffer size. This reduces the _allocs/op_ indicator for the v2 parsing function for the second function that did most allocations.
+ 3. **allocate-once buffer**, so that the vectorizing function counts what memory it will need then allocates and fill it. This mainly reduces the _allocs/op_ indicator for the vectorizing function. At this step, we are at 0-1 _allocs/op_, but still at 352 _B/op_ for parsing and 92 _B/op_ for vectorizing (for v3, but the same applies to v2).
+ 4. **information theory based optimizations**, with focus on each bit usage. This is detailed next. This finally reduces the _B/op_ indicator, leading to an highly optimized module.
+ 5. **cpu instructions optimizations** based on the previous. The idea is to avoid dealing with strings whenever possible and use bits. Indeed, a CPU has a native support of binary operations, while comparing strings does not (i.e. `cmpstr` take multiple cycles, but a binary shift takes one). This reduces the _n/op_ indicator.
 
-Fortunately, those optimizations always improved (or did not affect drastically) the ns/op indicator, so no balance had to be considered. The only balance was making our job hard so yours is better.
+Fortunately, those optimizations always improved (or did not affect drastically) the _ns/op_ indicator, so no balance had to be considered.
 
-The idea behind the fourth otimization lies on the information theory: if you have an information that could be represented by a finite set of elements, meaning you can enumerate them, then you could store them using `n` bits such that `n=ceil(log2(s))` with `s` the size of this finite set.
+The idea behind the fourth otimization lies on the information theory : if you have an information that could be represented by a finite set of elements, meaning you can enumerate them, then you could store them using `n` bits such that `n=ceil(log2(s))` with `s` the size of this finite set.
 
-In the case of CVSS, each attribute has its finite number of metrics with their finite set of possible values. It implies we fit in this case, so we could make it real. That's what we did.
+In the case of CVSS, each attribute has its finite number of metrics with their finite set of possible values. It implies we fit in this case, so we could make it real : that's what we did.
 
 In this module, we represent each metric set in the `values.go` file, so we enumerate them. Then, we count how many bits are necessary to store this, and use a slice of corresponding bytes (`bytes=ceil(bits/8)` with `bits` the sum of all `n`).
 To determine those, we build for each version a table with those data, leading us to determine that, for instance with CVSS v3, we need `44` bits so `6` bytes.
 
-Then, the only issue arises with implementing this idea. We define a scheme to specify what each bit is used for, and pull out hairs with bit masking and slice manip. Notice that it imply the vector object does not have attributes for corresponding metrics, but have some `uint8` attributes, making this hard to read (and reverse btw).
+Then, the only issue arises with implementing this idea. We define a scheme to specify what each bit is used for, and pull out hairs with bit masking and slice manipulations. Notice that it imply the vector object does not have attributes for corresponding metrics, but have some `uint8` attributes, making this hard to read.
 
-We are aware that this could still be improved as we could transitively state that CVSS vectors are a set of finite combinations, so we could enumerate them. This would lead us to a finite set of `573308928000` combinations for v3 and `139968000` for v2, which could be respectively represented on `40` bits (`=log2(573308928000)`) that makes `5` bytes and `28` bits (`=log2(139968000)`) that still makes `4`.
+We though of further improvements, as applying the information theory on the whole CVSS vector.
+Indeed, transitively CVSS vectors have a set of finite combinations, so we could enumerate them. This would lead us to a finite set of `573308928000` combinations for v3 and `139968000` for v2, which could be respectively represented on `40` bits (`=log2(573308928000)`) that makes `5` bytes and `28` bits (`=log2(139968000)`) that still makes `4`.
 This imply that CVSS v2 implementation can't be improved by this process.
-Nevertheless, this has been judged over-optimizations for now, but a motivated developer may do it for a cookie :laughing:
-
-Lastly, for the focused reader, as CVSS v3 vectors don't have to be ordered (CVSS v2 does in its specification document Section 2.4), there are many more possible combinations, and as temporal and environmental metrics are not mandatory, representing all the possibilities with an integer identifier would take many more bits and so bytes. Our approach is trusted better in this way.
+Moreover, in the case of CVSS v3 we may gain a byte, but due to the undetermined order of metrics, such an implementation is trusted not maintainable and too heavy facing the loss of only a byte.
 
 ### Comparison
 
@@ -206,6 +205,8 @@ Bug trophy list:
  - [`github.com/goark/go-cvss` #23](https://github.com/goark/go-cvss/issues/23) Invalid CVSS v2 vector
  - [`github.com/goark/go-cvss` #26](https://github.com/goark/go-cvss/issues/26) Improper Input Validation in CVSS v2 parsing
  - [`github.com/goark/go-cvss` #28](https://github.com/goark/go-cvss/issues/28) Another Improper Input Validation in CVSS v2 parsing
+ - [`github.com/goark/go-cvss` #31](https://github.com/goark/go-cvss/issues/31) One more Improper Input Validation in CVSS v2 parsing
+ - [`github.com/goark/go-cvss` #33](https://github.com/goark/go-cvss/issues/33) Invalid CVSS v2 environmental score computation
  - [`github.com/facebookincubator/nvdtools` #202](https://github.com/facebookincubator/nvdtools/issues/202) Improper Input Validation in CVSS v3 parsing
  - [`github.com/facebookincubator/nvdtools` #203](https://github.com/facebookincubator/nvdtools/issues/203) Improper Input Validation in CVSS v2 parsing
  - [`github.com/facebookincubator/nvdtools` #204](https://github.com/facebookincubator/nvdtools/issues/204) Invalid CVSS v2 environmental score computation
@@ -238,3 +239,9 @@ Vulnerability trophy list:
 ### CVSS v3.1
 
  - There is a lack of examples, as it's achieved by the CVSS v2.0 specification.
+
+### CVSS v4.0
+
+ - Table 24 shows 2 values for UI metric, whereas it is previously defined as 3 different values: there is an inconsistency.
+ - Table 24 shows 5 values for E metric, whereas it is previously defined as 4 different values: there is an inconsistency.
+ - Table 24 shows 3 values for MUI metric, whereas it is previously defined by Tables 5 and 15 that it could take 5 values: there is an inconsistency. Moreover, the RedHat implementation shows 4 values.

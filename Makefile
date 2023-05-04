@@ -1,9 +1,6 @@
 BENCH_FLAGS ?= -cpuprofile=cpu.pprof -memprofile=mem.pprof -benchmem
 
-# Directories containing independent Go modules.
-#
-# We track coverage only for the main module.
-MODULE_DIRS ?= ./20 ./30 ./31 ./benchmarks
+MODULE_DIRS ?= ./20 ./30 ./31 ./benchmarks 
 
 .PHONY: test
 test:

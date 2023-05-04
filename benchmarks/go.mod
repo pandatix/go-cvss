@@ -1,6 +1,6 @@
 module github.com/pandatix/go-cvss/benchmarks
 
-go 1.19
+go 1.20
 
 replace github.com/pandatix/go-cvss => ../
 
@@ -12,7 +12,7 @@ require (
 	github.com/pandatix/go-cvss v0.5.2
 	github.com/slimsec/cvss v0.0.0-20150707152743-289f023e1db1
 	github.com/umisama/go-cvss v0.0.0-20150430082624-a4ad666ead9b
-	github.com/zntrio/mitre v0.0.2-0.20230302090312-8e21160b0691
+	github.com/zntrio/mitre v1.0.1
 )
 
 require (
@@ -20,8 +20,8 @@ require (
 	github.com/elazarl/go-bindata-assetfs v1.0.1 // indirect
 	github.com/goark/errs v1.2.2 // indirect
 	github.com/stephens2424/writerset v1.0.2 // indirect
-	golang.org/x/mod v0.8.0 // indirect
-	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/tools v0.6.0 // indirect
-	google.golang.org/protobuf v1.28.1 // indirect
+	golang.org/x/mod v0.10.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/tools v0.8.0 // indirect
+	google.golang.org/protobuf v1.30.0 // indirect
 )

@@ -1,0 +1,27 @@
+version: 2
+updates:
+  # Github actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  
+  # Root Go module
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    assignees:
+      - "pandatix"
+
+  # Benchmark Go module
+  - package-ecosystem: "gomod"
+    directory: "/benchmarks"
+    schedule:
+      interval: "weekly"
+
+  # Differential Fuzzing Go module
+  - package-ecosystem: "gomod"
+    directory: "/differential"
+    schedule:
+      interval: "weekly"

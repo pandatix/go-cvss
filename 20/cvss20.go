@@ -127,7 +127,7 @@ func (cvss20 CVSS20) Vector() string {
 		app(&b, "/AR:", ar)
 	}
 
-	return unsafe.String(&b[0], len(b))
+	return unsafe.String(&b[0], l)
 }
 
 func lenVec(cvss20 *CVSS20) int {

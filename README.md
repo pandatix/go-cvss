@@ -19,7 +19,7 @@ It currently supports :
  - [X] [CVSS 2.0](https://www.first.org/cvss/v2/guide)
  - [X] [CVSS 3.0](https://www.first.org/cvss/v3.0/specification-document)
  - [X] [CVSS 3.1](https://www.first.org/cvss/v3.1/specification-document)
- - [ ] CVSS 4.0 (currently not published)
+ - [ ] [CVSS 4.0](https://www.first.org/cvss/v4.0/specification-document)
 
 > **Warning**
 >
@@ -33,6 +33,7 @@ It currently supports :
    - [CVSS v2.0](#cvss-v20)
    - [CVSS v3.0](#cvss-v30)
    - [CVSS v3.1](#cvss-v31)
+   - [CVSS v4.0](#cvss-v40)
    - [How it works](#how-it-works)
    - [Comparison](#comparison)
  - [Differential fuzzing](#differential-fuzzing)
@@ -40,6 +41,7 @@ It currently supports :
    - [CVSS v2.0](#cvss-v20-1)
    - [CVSS v3.0](#cvss-v30-1)
    - [CVSS v3.1](#cvss-v31-1)
+   - [CVSS v4.0](#cvss-v40-1)
 
 ## How to use
 
@@ -75,7 +77,7 @@ func main() {
 
 ## How it was built
 
-This Go module was built iteratively through time, and is represented by the following flow diagram.
+This Go module was built iteratively through time, and the process is summarized by the following diagram.
 
 <div align="center" width="800px">
 	<img src="res/dev-pipeline.png">
@@ -141,6 +143,20 @@ BenchmarkCVSS31Set-4                        31707997           35.68 ns/op      
 BenchmarkCVSS31BaseScore-4                  31108681           39.70 ns/op         0 B/op          0 allocs/op
 BenchmarkCVSS31TemporalScore-4              15552028           73.01 ns/op         0 B/op          0 allocs/op
 BenchmarkCVSS31EnvironmentalScore-4         13541654           79.26 ns/op         0 B/op          0 allocs/op
+```
+
+### CVSS v4.0
+
+```
+goos: linux
+goarch: amd64
+pkg: github.com/pandatix/go-cvss/40
+cpu: 11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz
+BenchmarkParseVector_Base-12                 4412576           253.8 ns/op        16 B/op          1 allocs/op
+BenchmarkParseVector_WithTemEnvSup-12        1304085           789.7 ns/op        16 B/op          1 allocs/op
+BenchmarkCVSS40Vector-12                     2974233           401.6 ns/op       160 B/op          1 allocs/op
+BenchmarkCVSS40Get-12                      251791461           4.744 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS40Set-12                       97682920           12.48 ns/op         0 B/op          0 allocs/op
 ```
 
 ### How it works
@@ -245,3 +261,5 @@ Vulnerability trophy list:
  - Table 24 shows 2 values for UI metric, whereas it is previously defined as 3 different values: there is an inconsistency.
  - Table 24 shows 5 values for E metric, whereas it is previously defined as 4 different values: there is an inconsistency.
  - Table 24 shows 3 values for MUI metric, whereas it is previously defined by Tables 5 and 15 that it could take 5 values: there is an inconsistency. Moreover, the RedHat implementation shows 4 values.
+ - Section 8.2 refers to "Table 32" which does not exist.
+ - The algorithm defined in Section 8.2 is unclear and so won't be properly implemented and used. The reference implementation from RedHat does not consider a proper Hamming distance but "levels" as float values and their difference: for a and b two objects, it is roughly the number of permutations necessary for a and b to be equal. In the specification, there is an idea of direct transition between permutations that makes the Hamming distance definition falsely. This may be a Manhattan distance. Having such complex algorithm without a pseudo-code implementation or formulas (as for CVSS v3) increases cognitive-cost during implementation, debug and explainability processes. The specification MUST be explainable by itself (self-supporting) without relying on an external implementation, as now both are evolving differently through time (the specification evolving with major/minor versions every 4 years, the code or a specification patch at any time with a publication or a commit).

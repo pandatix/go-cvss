@@ -122,7 +122,7 @@ func (cvss30 CVSS30) Vector() string {
 	notMandatory(&b, "/MI:", cvss30.get("MI"))
 	notMandatory(&b, "/MA:", cvss30.get("MA"))
 
-	return unsafe.String(&b[0], len(b))
+	return unsafe.String(&b[0], l)
 }
 
 func lenVec(cvss30 *CVSS30) int {
@@ -151,7 +151,7 @@ func lenVec(cvss30 *CVSS30) int {
 		l += 5
 	}
 
-	// Environmental
+	// Environmental:
 	// - CR, IR, AR, MS, MC, MI, MA: 4
 	// - MAV, MAC, MPR, MUI: 5
 	// - each one adds a separator

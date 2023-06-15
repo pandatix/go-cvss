@@ -1,6 +1,6 @@
 BENCH_FLAGS ?= -cpuprofile=cpu.pprof -memprofile=mem.pprof -benchmem
 
-MODULE_DIRS ?= ./20 ./30 ./31 ./benchmarks 
+MODULE_DIRS ?= ./20 ./30 ./31 ./40 ./benchmarks 
 
 .PHONY: test
 test:

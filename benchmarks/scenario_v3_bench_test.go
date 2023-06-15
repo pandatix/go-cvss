@@ -180,7 +180,4 @@ var (
 	Gbunji2Vec    bunji2.Vector
 	GgoarkVec3    *goark3.Base
 	GfacebookVec3 facebook3.Vector
-	Gerr          error
-	Gstr          string
-	Gf            float64
 )

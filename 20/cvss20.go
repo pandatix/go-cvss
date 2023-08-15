@@ -531,6 +531,23 @@ func (cvss20 CVSS20) EnvironmentalScore() float64 {
 	return roundTo1Decimal((adjustedTemporal + (10-adjustedTemporal)*cdp) * td)
 }
 
+// Rating returns the verbose for a given rating.
+// It does not check wether the number of decimal is valid,
+// as it can differ due to binary imprecisions, and such
+// behaviour is not enforced by the specification.
+func Rating(score float64) (string, error) {
+	if score < 0.0 || score > 10.0 {
+		return "", ErrOutOfBoundsScore
+	}
+	if score >= 7.0 {
+		return "HIGH", nil
+	}
+	if score >= 4.0 {
+		return "MEDIUM", nil
+	}
+	return "LOW", nil
+}
+
 // Helpers to compute CVSS v2.0 scores.
 
 func accessVector(v uint8) float64 {

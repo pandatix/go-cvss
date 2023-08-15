@@ -9,6 +9,7 @@ var (
 	ErrTooShortVector     = errors.New("too short vector")
 	ErrInvalidMetricOrder = errors.New("invalid metric order")
 	ErrInvalidMetricValue = errors.New("invalid metric value")
+	ErrOutOfBoundsScore   = errors.New("out of bounds score")
 )
 
 // ErrInvalidMetric is an error returned when a given

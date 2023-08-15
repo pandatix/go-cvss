@@ -139,6 +139,38 @@ func TestParseVector(t *testing.T) {
 	}
 }
 
+func TestRating(t *testing.T) {
+	t.Parallel()
+
+	var tests = map[string]struct {
+		Score          float64
+		ExpectedRating string
+		ExpectedErr    error
+	}{
+		"CVE-2021-4131": {
+			Score:          6.8,
+			ExpectedRating: "MEDIUM",
+			ExpectedErr:    nil,
+		},
+		"CVE-2017-17627": {
+			Score:          7.5,
+			ExpectedRating: "HIGH",
+			ExpectedErr:    nil,
+		},
+	}
+
+	for testname, tt := range tests {
+		t.Run(testname, func(t *testing.T) {
+			assert := assert.New(t)
+
+			rating, err := Rating(tt.Score)
+
+			assert.Equal(tt.ExpectedRating, rating)
+			assert.Equal(tt.ExpectedErr, err)
+		})
+	}
+}
+
 func TestScores(t *testing.T) {
 	t.Parallel()
 

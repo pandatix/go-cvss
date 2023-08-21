@@ -861,7 +861,9 @@ func (cvss40 *CVSS40) Set(abv, value string) error {
 			return err
 		}
 		cvss40.u7 = (cvss40.u7 & 0b11111110) | ((v & 0b100) >> 2)
-		cvss40.u8 = (cvss40.u8 & 0b00000000) | ((v & 0b011) << 6)
+		// cvss40.u8 & 0b00000000 is not computed as it will always be 0
+		// and the remaining 6 bytes are not used.
+		cvss40.u8 = (v & 0b011) << 6
 	}
 	return nil
 }
@@ -890,15 +892,6 @@ func (cvss40 CVSS40) get(abv string) string {
 func (cvss40 CVSS40) Score() float64 {
 	// TODO implement score computation when specification is fixed
 	return 0
-}
-
-func mod(base, modified uint8) uint8 {
-	// If "modified" is different of 0, it is different of "X"
-	// => shift to one before (skip X index)
-	if modified != 0 {
-		return modified - 1
-	}
-	return base
 }
 
 // Nomenclature returns the CVSS v4.0 configuration used when scoring.

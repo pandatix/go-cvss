@@ -16,12 +16,6 @@ require (
 )
 
 require (
-	github.com/dvyukov/go-fuzz v0.0.0-20220726122315-1d375ef9f9f6 // indirect
-	github.com/elazarl/go-bindata-assetfs v1.0.1 // indirect
 	github.com/goark/errs v1.2.2 // indirect
-	github.com/stephens2424/writerset v1.0.2 // indirect
-	golang.org/x/mod v0.10.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
-	golang.org/x/tools v0.8.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 )

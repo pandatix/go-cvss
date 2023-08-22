@@ -122,7 +122,8 @@ func (cvss31 CVSS31) Vector() string {
 	notMandatory(&b, "/MI:", cvss31.get("MI"))
 	notMandatory(&b, "/MA:", cvss31.get("MA"))
 
-	return unsafe.String(&b[0], l)
+	return *(*string)(unsafe.Pointer(&b))
+	// return unsafe.String(&b[0], l)
 }
 
 func lenVec(cvss31 *CVSS31) int {

@@ -1,8 +1,10 @@
 name: ClusterFuzzLite PR fuzzing
+
 on:
   pull_request:
     paths:
       - '**'
+
 permissions: read-all
 jobs:
   PR:

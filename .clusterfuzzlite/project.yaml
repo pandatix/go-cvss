@@ -1,0 +1,8 @@
+homepage: "https://github.com/pandatix/go-cvss"
+language: go
+primary_contact: "lucastesson@protonmail.com"
+fuzzing_engines:
+  - libfuzzer
+sanitizers:
+  - address
+main_repo: "https://github.com/pandatix/go-cvss"

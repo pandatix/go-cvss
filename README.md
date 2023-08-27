@@ -9,7 +9,7 @@
 	<a href="https://github.com/pandatix/go-cvss/actions/workflows/codeql-analysis.yaml"><img src="https://img.shields.io/github/actions/workflow/status/pandatix/go-cvss/codeql-analysis.yaml?style=for-the-badge&label=CodeQL" alt="CodeQL"></a>
 	<br>
 	<a href="https://securityscorecards.dev/viewer/?uri=github.com/pandatix/go-cvss"><img src="https://img.shields.io/ossf-scorecard/github.com/pandatix/go-cvss?label=openssf%20scorecard&style=for-the-badge" alt="OpenSSF Scoreboard"></a>
-	<a href="https://bestpractices.coreinfrastructure.org/en/projects/7519"><img src="https://img.shields.io/cii/summary/7519?style=for-the-badge&label=openssf%20best%20practices" alt="OpenSSF Best Practices Summary"></a>
+	<a href="https://www.bestpractices.dev/en/projects/7519"><img src="https://img.shields.io/cii/summary/7519?style=for-the-badge&label=openssf%20best%20practices" alt="OpenSSF Best Practices Summary"></a>
 </div>
 
 Go-CVSS is a blazing-fast, low allocations and small memory-usage Go module made to manipulate Common Vulnerability Scoring System (CVSS).

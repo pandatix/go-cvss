@@ -9,12 +9,12 @@ import (
 var Gcvss40 *gocvss40.CVSS40
 var Gerr error
 
-func BenchmarkParseVector_Base(b *testing.B) {
+func BenchmarkParseVector_B(b *testing.B) {
 	benchmarkParseVector("CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N", b)
 }
 
-func BenchmarkParseVector_WithTemEnvSup(b *testing.B) {
-	benchmarkParseVector("CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:N/VC:L/SC:N/VI:L/SI:N/VA:N/SA:N/E:A/CR:M/IR:X/AR:H/MAV:L/MAC:H/MAT:N/MPR:H/MUI:N/MVC:X/MVI:L/MVA:H/MSC:H/MSI:X/MSA:S/S:N/AU:X/R:I/V:C/RE:M/U:Amber", b)
+func BenchmarkParseVector_BTES(b *testing.B) {
+	benchmarkParseVector("CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N/E:U/CR:L/IR:H/AR:L/MAV:A/MAC:H/MAT:N/MPR:N/MUI:P/MVC:H/MVI:N/MVA:H/MSC:N/MSI:L/MSA:S/S:N/AU:N/R:I/V:C/RE:H/U:Green", b)
 }
 
 func benchmarkParseVector(vector string, b *testing.B) {
@@ -31,7 +31,7 @@ func benchmarkParseVector(vector string, b *testing.B) {
 var Gstr string
 
 func BenchmarkCVSS40Vector(b *testing.B) {
-	cvss40, _ := gocvss40.ParseVector("CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:N/VC:L/SC:N/VI:L/SI:N/VA:N/SA:N/E:A/CR:M/IR:X/AR:H/MAV:L/MAC:H/MAT:N/MPR:H/MUI:N/MVC:X/MVI:L/MVA:H/MSC:H/MSI:X/MSA:S/S:N/AU:X/R:I/V:C/RE:M/U:Amber")
+	cvss40, _ := gocvss40.ParseVector("CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N/E:U/CR:L/IR:H/AR:L/MAV:A/MAC:H/MAT:N/MPR:N/MUI:P/MVC:H/MVI:N/MVA:H/MSC:N/MSI:L/MSA:S/S:N/AU:N/R:I/V:C/RE:H/U:Green")
 	var str string
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

@@ -2,6 +2,7 @@ package gocvss40
 
 import (
 	"strings"
+	"sync"
 	"unsafe"
 )
 
@@ -9,6 +10,19 @@ import (
 
 const (
 	header = "CVSS:4.0/"
+)
+
+var (
+	order = [][]string{
+		// Base
+		{"AV", "AC", "AT", "PR", "UI", "VC", "VI", "VA", "SC", "SI", "SA"},
+		// Threat
+		{"E"},
+		// Environmental
+		{"CR", "IR", "AR", "MAV", "MAC", "MAT", "MPR", "MUI", "MVC", "MVI", "MVA", "MSC", "MSI", "MSA"},
+		// Supplemental
+		{"S", "AU", "R", "V", "RE", "U"},
+	}
 )
 
 // ParseVector parses a given vector string, validates it
@@ -19,6 +33,13 @@ func ParseVector(vector string) (*CVSS40, error) {
 		return nil, ErrInvalidCVSSHeader
 	}
 	vector = vector[len(header):]
+
+	// Split parts
+	partsPtr := splitPool.Get()
+	defer splitPool.Put(partsPtr)
+	pts := partsPtr.([]string)
+	ei := split(pts, vector)
+	pts = pts[:ei+1]
 
 	// Allocate CVSS v4.0 object
 	cvss40 := &CVSS40{
@@ -33,71 +54,78 @@ func ParseVector(vector string) (*CVSS40, error) {
 		u8: 0, // last 6 bits are not used
 	}
 
-	// Parse vector
-	kvm := kvm{}
-	start := 0
-	l := len(vector)
-	for i := 0; i <= l; i++ {
-		if i == l || vector[i] == '/' {
-			a, v := splitCouple(vector[start:i])
-			if err := kvm.Set(a); err != nil {
-				return nil, err
+	slci := 0
+	i := 0
+	for _, pt := range pts {
+		abv, v, _ := strings.Cut(pt, ":")
+		switch slci {
+		// Mandatory metrics
+		case 0:
+			if abv != order[slci][i] {
+				return nil, ErrInvalidMetricOrder
 			}
-			if err := cvss40.Set(a, v); err != nil {
+			i++
+			if i == len(order[slci]) {
+				slci++
+				i = 0
+			}
+		// Non-mandatory metrics
+		default:
+			// Go to next element in slice, or next slice if fully consumed
+			for slci < len(order) && abv != order[slci][i] {
+				i++
+				if i == len(order[slci]) {
+					slci++
+					i = 0
+				}
+			}
+			if slci == len(order) {
+				return nil, ErrInvalidMetricOrder
+			}
+			i++
+			if i == len(order[slci]) {
+				slci++
+				i = 0
+			}
+		}
 
-				return nil, err
-			}
-			start = i + 1
+		if err := cvss40.Set(abv, v); err != nil {
+			return nil, err
 		}
 	}
-
-	// Check all base metrics are defined
-	if !kvm.av {
-		return nil, &ErrMissing{Abv: "AV"}
-	}
-	if !kvm.ac {
-		return nil, &ErrMissing{Abv: "AC"}
-	}
-	if !kvm.at {
-		return nil, &ErrMissing{Abv: "AT"}
-	}
-	if !kvm.pr {
-		return nil, &ErrMissing{Abv: "PR"}
-	}
-	if !kvm.ui {
-		return nil, &ErrMissing{Abv: "UI"}
-	}
-	if !kvm.vc {
-		return nil, &ErrMissing{Abv: "VC"}
-	}
-	if !kvm.sc {
-		return nil, &ErrMissing{Abv: "SC"}
-	}
-	if !kvm.vi {
-		return nil, &ErrMissing{Abv: "VI"}
-	}
-	if !kvm.si {
-		return nil, &ErrMissing{Abv: "SI"}
-	}
-	if !kvm.va {
-		return nil, &ErrMissing{Abv: "VA"}
-	}
-	if !kvm.sa {
-		return nil, &ErrMissing{Abv: "SA"}
+	// Check whole last metric group is specified in vector (=> i == 0)
+	if slci == 0 {
+		return nil, ErrTooShortVector
 	}
 
 	return cvss40, nil
 }
 
-// splitCouple is more efficient than `strings.Cut` as it is
-// specialised on the ':' char.
-func splitCouple(couple string) (string, string) {
-	for i := 0; i < len(couple); i++ {
-		if couple[i] == ':' {
-			return couple[:i], couple[i+1:]
+var splitPool = sync.Pool{
+	New: func() any {
+		return make([]string, 32)
+	},
+}
+
+func split(dst []string, vector string) int {
+	start := 0
+	curr := 0
+	l := len(vector)
+	i := 0
+	for ; i < l; i++ {
+		if vector[i] == '/' {
+			dst[curr] = vector[start:i]
+
+			start = i + 1
+			curr++
+
+			if curr == 31 {
+				break
+			}
 		}
 	}
-	return couple, ""
+	dst[curr] = vector[start:]
+	return curr
 }
 
 // Vector returns the CVSS v4.0 vector string representation.
@@ -113,10 +141,10 @@ func (cvss40 CVSS40) Vector() string {
 	mandatory(&b, "/PR:", cvss40.get("PR"))
 	mandatory(&b, "/UI:", cvss40.get("UI"))
 	mandatory(&b, "/VC:", cvss40.get("VC"))
-	mandatory(&b, "/SC:", cvss40.get("SC"))
 	mandatory(&b, "/VI:", cvss40.get("VI"))
-	mandatory(&b, "/SI:", cvss40.get("SI"))
 	mandatory(&b, "/VA:", cvss40.get("VA"))
+	mandatory(&b, "/SC:", cvss40.get("SC"))
+	mandatory(&b, "/SI:", cvss40.get("SI"))
 	mandatory(&b, "/SA:", cvss40.get("SA"))
 
 	// Threat
@@ -864,6 +892,9 @@ func (cvss40 *CVSS40) Set(abv, value string) error {
 		// cvss40.u8 & 0b00000000 is not computed as it will always be 0
 		// and the remaining 6 bytes are not used.
 		cvss40.u8 = (v & 0b011) << 6
+
+	default:
+		return &ErrInvalidMetric{Abv: abv}
 	}
 	return nil
 }
@@ -936,97 +967,4 @@ func Rating(score float64) (string, error) {
 		return "LOW", nil
 	}
 	return "NONE", nil
-}
-
-// kvm stands for Key-Value Map, and is used to make sure each
-// metric is defined only once, as documented by the CVSS v3.1
-// specification document, section 6 "Vector String" paragraph 3.
-// Using this avoids a map that escapes to heap for each call of
-// ParseVector, as its size is known and wont evolve.
-type kvm struct {
-	// base metrics
-	av, ac, at, pr, ui, vc, sc, vi, si, va, sa bool
-	// threat metrics
-	e bool
-	// environmental metrics
-	cr, ir, ar, mav, mac, mat, mpr, mui, mvc, mvi, mva, msc, msi, msa bool
-	// supplemental metrics
-	s, au, r, v, re, u bool
-}
-
-func (kvm *kvm) Set(abv string) error {
-	var dst *bool
-	switch abv {
-	case "AV":
-		dst = &kvm.av
-	case "AC":
-		dst = &kvm.ac
-	case "AT":
-		dst = &kvm.at
-	case "PR":
-		dst = &kvm.pr
-	case "UI":
-		dst = &kvm.ui
-	case "VC":
-		dst = &kvm.vc
-	case "SC":
-		dst = &kvm.sc
-	case "VI":
-		dst = &kvm.vi
-	case "SI":
-		dst = &kvm.si
-	case "VA":
-		dst = &kvm.va
-	case "SA":
-		dst = &kvm.sa
-	case "E":
-		dst = &kvm.e
-	case "CR":
-		dst = &kvm.cr
-	case "IR":
-		dst = &kvm.ir
-	case "AR":
-		dst = &kvm.ar
-	case "MAV":
-		dst = &kvm.mav
-	case "MAC":
-		dst = &kvm.mac
-	case "MAT":
-		dst = &kvm.mat
-	case "MPR":
-		dst = &kvm.mpr
-	case "MUI":
-		dst = &kvm.mui
-	case "MVC":
-		dst = &kvm.mvc
-	case "MVI":
-		dst = &kvm.mvi
-	case "MVA":
-		dst = &kvm.mva
-	case "MSC":
-		dst = &kvm.msc
-	case "MSI":
-		dst = &kvm.msi
-	case "MSA":
-		dst = &kvm.msa
-	case "S":
-		dst = &kvm.s
-	case "AU":
-		dst = &kvm.au
-	case "R":
-		dst = &kvm.r
-	case "V":
-		dst = &kvm.v
-	case "RE":
-		dst = &kvm.re
-	case "U":
-		dst = &kvm.u
-	default:
-		return &ErrInvalidMetric{Abv: abv}
-	}
-	if *dst {
-		return &ErrDefinedN{Abv: abv}
-	}
-	*dst = true
-	return nil
 }

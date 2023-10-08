@@ -205,11 +205,11 @@ goos: linux
 goarch: amd64
 pkg: github.com/pandatix/go-cvss/40
 cpu: 11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz
-BenchmarkParseVector_B-12                    4665024           259.9 ns/op        16 B/op          1 allocs/op
-BenchmarkParseVector_BTES-12                 1000000            1006 ns/op        16 B/op          1 allocs/op
-BenchmarkCVSS40Vector-12                     3513789           331.1 ns/op       192 B/op          1 allocs/op
-BenchmarkCVSS40Get-12                      309996543           3.984 ns/op         0 B/op          0 allocs/op
-BenchmarkCVSS40Set-12                      133516072           8.982 ns/op         0 B/op          0 allocs/op
+BenchmarkParseVector_B-12                    4363825           276.7 ns/op        16 B/op          1 allocs/op
+BenchmarkParseVector_BTES-12                 1304852           896.8 ns/op        16 B/op          1 allocs/op
+BenchmarkCVSS40Vector-12                     3962140           320.7 ns/op       192 B/op          1 allocs/op
+BenchmarkCVSS40Get-12                      300182163           3.900 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS40Set-12                      112736655           10.69 ns/op         0 B/op          0 allocs/op
 ```
 
 ### How it works
@@ -309,6 +309,6 @@ Vulnerability trophy list:
 
  - There is a lack of examples, as it's achieved by the CVSS v2.0 specification.
 
-### CVSS v4.0
+### CVSS v4.0
 
 There are no feedbacks from the implementation, as this work was used during the creation of CVSS v4.0 thus the concerns were adressed before publication.

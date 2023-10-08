@@ -1,15 +1,15 @@
 package gocvss40
 
 import (
+	"log"
 	"strings"
-	"sync"
 	"unsafe"
 )
 
 // This file is based on https://www.first.org/cvss/v4-0/cvss-v40-specification.pdf.
 
 const (
-	header = "CVSS:4.0/"
+	header = "CVSS:4.0"
 )
 
 var (
@@ -34,13 +34,6 @@ func ParseVector(vector string) (*CVSS40, error) {
 	}
 	vector = vector[len(header):]
 
-	// Split parts
-	partsPtr := splitPool.Get()
-	defer splitPool.Put(partsPtr)
-	pts := partsPtr.([]string)
-	ei := split(pts, vector)
-	pts = pts[:ei+1]
-
 	// Allocate CVSS v4.0 object
 	cvss40 := &CVSS40{
 		u0: 0,
@@ -54,38 +47,35 @@ func ParseVector(vector string) (*CVSS40, error) {
 		u8: 0, // last 6 bits are not used
 	}
 
-	slci := 0
-	i := 0
-	for _, pt := range pts {
+	cut := 0
+	slci, orderi := 0, 0
+	for i := 1; i <= len(vector); i++ {
+		if i != len(vector) && vector[i] != '/' {
+			continue
+		}
+
+		// Remove leading /
+		pt := vector[cut:min(i, len(vector))]
+		cut = i
+		if !strings.HasPrefix(pt, "/") {
+			return nil, ErrInvalidMetricValue
+		}
+		pt = pt[1:]
+		// Cut on colon
 		abv, v, _ := strings.Cut(pt, ":")
-		switch slci {
-		// Mandatory metrics
-		case 0:
-			if abv != order[slci][i] {
+		// Check (non)mandatory values
+		for {
+			if (slci == 0 && abv != order[0][orderi]) || slci == len(order) {
 				return nil, ErrInvalidMetricOrder
 			}
-			i++
-			if i == len(order[slci]) {
+			out := abv == order[slci][orderi]
+			orderi++
+			if orderi == len(order[slci]) {
 				slci++
-				i = 0
+				orderi = 0
 			}
-		// Non-mandatory metrics
-		default:
-			// Go to next element in slice, or next slice if fully consumed
-			for slci < len(order) && abv != order[slci][i] {
-				i++
-				if i == len(order[slci]) {
-					slci++
-					i = 0
-				}
-			}
-			if slci == len(order) {
-				return nil, ErrInvalidMetricOrder
-			}
-			i++
-			if i == len(order[slci]) {
-				slci++
-				i = 0
+			if out {
+				break
 			}
 		}
 
@@ -101,33 +91,6 @@ func ParseVector(vector string) (*CVSS40, error) {
 	return cvss40, nil
 }
 
-var splitPool = sync.Pool{
-	New: func() any {
-		return make([]string, 32)
-	},
-}
-
-func split(dst []string, vector string) int {
-	start := 0
-	curr := 0
-	l := len(vector)
-	i := 0
-	for ; i < l; i++ {
-		if vector[i] == '/' {
-			dst[curr] = vector[start:i]
-
-			start = i + 1
-			curr++
-
-			if curr == 31 {
-				break
-			}
-		}
-	}
-	dst[curr] = vector[start:]
-	return curr
-}
-
 // Vector returns the CVSS v4.0 vector string representation.
 func (cvss40 CVSS40) Vector() string {
 	l := lenVec(&cvss40)
@@ -135,7 +98,7 @@ func (cvss40 CVSS40) Vector() string {
 	b = append(b, header...)
 
 	// Base
-	mandatory(&b, "AV:", cvss40.get("AV"))
+	mandatory(&b, "/AV:", cvss40.get("AV"))
 	mandatory(&b, "/AC:", cvss40.get("AC"))
 	mandatory(&b, "/AT:", cvss40.get("AT"))
 	mandatory(&b, "/PR:", cvss40.get("PR"))
@@ -178,12 +141,12 @@ func (cvss40 CVSS40) Vector() string {
 }
 
 func lenVec(cvss40 *CVSS40) int {
-	// Header: constant, so fixed (9)
+	// Header: constant, so fixed (11)
 	// Base:
 	// - AV, AC, AT, PR, UI, VC, SC, VI, SI, VA, SA: 4
-	// - separators: 10
-	// Total: 11*4 + 10 = 54
-	l := len(header) + 54
+	// - separators: 11
+	// Total: 11*4 + 11 = 55
+	l := len(header) + 55
 
 	// Threat:
 	// - E: 3
@@ -921,8 +884,113 @@ func (cvss40 CVSS40) get(abv string) string {
 // Score returns the CVSS v4.0's score.
 // Use Nomenclature for getting groups used by computation.
 func (cvss40 CVSS40) Score() float64 {
-	// TODO implement score computation when specification is fixed
-	return 0
+	// Get metrics
+	// TODO fetch environmental instead when defined
+	// av := mod((cvss40.u0&0b11000000)>>6, (cvss40.u3&0b00001110)>>1)
+	// ac := mod((cvss40.u0&0b00100000)>>5, ((cvss40.u3&0b00000001)<<1)|((cvss40.u4&0b10000000)>>7))
+	// at := mod((cvss40.u0&0b00010000)>>4, (cvss40.u4&0b01100000)>>5)
+	// pr := mod((cvss40.u0&0b00001100)>>2, (cvss40.u4&0b00011000)>>3)
+	// ui := mod(cvss40.u0&0b00000011, (cvss40.u4&0b00000110)>>1)
+	// vc := mod((cvss40.u1&0b11000000)>>6, ((cvss40.u4&0b00000001)<<1)|((cvss40.u5&0b10000000)>>7))
+	// sc := mod((cvss40.u1&0b00110000)>>4, (cvss40.u5&0b00000110)>>1)
+	// vi := mod((cvss40.u1&0b00001100)>>2, (cvss40.u5&0b01100000)>>5)
+	// si := mod(cvss40.u1&0b00000011, ((cvss40.u5&0b00000001)<<2)|((cvss40.u6&0b11000000)>>6))
+	// va := mod((cvss40.u2&0b11000000)>>6, (cvss40.u5&0b00011000)>>3)
+	// sa := mod((cvss40.u2&0b00110000)>>4, (cvss40.u6&0b00111000)>>3)
+	av := (cvss40.u0 & 0b11000000) >> 6
+	ac := (cvss40.u0 & 0b00100000) >> 5
+	at := (cvss40.u0 & 0b00010000) >> 4
+	pr := (cvss40.u0 & 0b00001100) >> 2
+	ui := cvss40.u0 & 0b00000011
+	vc := (cvss40.u1 & 0b11000000) >> 6
+	sc := (cvss40.u1 & 0b00110000) >> 4
+	vi := (cvss40.u1 & 0b00001100) >> 2
+	si := cvss40.u1 & 0b00000011
+	va := (cvss40.u2 & 0b11000000) >> 6
+	sa := (cvss40.u2 & 0b00110000) >> 4
+
+	// Compute EQs
+	// => EQ1 - Table 25
+	eq1 := 0
+	if av == av_n && pr == pr_n && ui == ui_n {
+		eq1 = 0
+	} else if (av == av_n || pr == pr_n || ui == ui_n) && !(av == av_n && pr == pr_n && ui == ui_n) && !(av == av_p) {
+		eq1 = 1
+	} else if av == av_p || !(av == av_n || pr == pr_n || ui == ui_n) {
+		eq1 = 2
+	} else {
+		log.Fatalf("invalid CVSS configuration: AV:%s/PR:%s/UI:%s\n", cvss40.get("AV"), cvss40.get("PR"), cvss40.get("UI"))
+	}
+	// => EQ2 - Table 26
+	eq2 := 0
+	if ac == ac_l && at == at_n {
+		eq2 = 0
+	} else if !(ac == ac_l && at == at_n) {
+		eq2 = 1
+	} else {
+		log.Fatalf("invalid CVSS configuration: AC:%s/AT:%s\n", cvss40.get("AC"), cvss40.get("AT"))
+	}
+	// => EQ3 - Table 27
+	eq3 := 0
+	if vc == vscia_h && vi == vscia_h {
+		eq3 = 0
+	} else if !(vc == vscia_h && vi == vscia_h) && (vc == vscia_h || vi == vscia_h || va == vscia_h) {
+		eq3 = 1
+	} else if !(vc == vscia_h || vi == vscia_h || va == vscia_h) {
+		eq3 = 2
+	} else {
+		log.Fatalf("invalid CVSS configuration: VC:%s/VI:%s/VA:%s\n", cvss40.get("VC"), cvss40.get("VI"), cvss40.get("VA"))
+	}
+	// => EQ4 - Table 28
+	eq4 := 0
+	if cvss40.get("MSI") == "S" || cvss40.get("MSA") == "S" {
+		eq4 = 0
+	} else if !(cvss40.get("MSI") == "S" && cvss40.get("MSA") == "S") && (sc == vscia_h || si == vscia_h || sa == vscia_h) {
+		eq4 = 1
+	} else if !(cvss40.get("MSI") == "S" && cvss40.get("MSA") == "S") && !(sc == vscia_h || si == vscia_h || sa == vscia_h) {
+		eq4 = 2
+	} else {
+		log.Fatalf("invalid CVSS configuration: MSI:%s/MSA:%s/SC:%s/SI:%s/SA:%s\n", cvss40.get("MSI"), cvss40.get("MSA"), cvss40.get("SC"), cvss40.get("SI"), cvss40.get("SA"))
+	}
+	// => EQ5 - Table 29
+	eq5 := 0
+	if cvss40.get("E") == "A" {
+		eq5 = 0
+	} else if cvss40.get("E") == "P" {
+		eq5 = 1
+	} else if cvss40.get("E") == "U" {
+		eq5 = 2
+	} else {
+		log.Fatalf("invalid CVSS configuration: E:%s\n", cvss40.get("E"))
+	}
+	// => EQ6 - Table 30
+	eq6 := 0
+	if av == av_n && pr == pr_n && ui == ui_n {
+		eq6 = 0
+	} else if (cvss40.get("CR") == "H" && cvss40.get("VC") == "H") || (cvss40.get("IR") == "H" && vi == vscia_h) || (cvss40.get("AR") == "H" && va == vscia_h) {
+		eq6 = 1
+	} else {
+		log.Fatalf("invalid CVSS configuration: AV:%s/PR:%s/UI:%s/CR:%s/VC:%s/IR:%s/VI:%s/AR:%s/VA:%s\n", cvss40.get("AV"), cvss40.get("PR"), cvss40.get("UI"), cvss40.get("CR"), cvss40.get("VC"), cvss40.get("IR"), cvss40.get("VI"), cvss40.get("AR"), cvss40.get("VA"))
+	}
+	// => EQ3+EQ6 - Table 31
+	eq3eq6 := 0
+	if vc == vscia_h && vi == vscia_h && (cvss40.get("CR") == "H" || cvss40.get("IR") == "H" || (cvss40.get("AR") == "H" && va == vscia_h)) {
+		eq3eq6 = 00
+	} else if vc == vscia_h && vi == vscia_h && !(cvss40.get("CR") == "H" || cvss40.get("IR") == "H") && !(cvss40.get("AR") == "H" && va == vscia_h) {
+		eq3eq6 = 01
+	} else if !(vc == vscia_h && vi == vscia_h) && (vc == vscia_h || vi == vscia_h || va == vscia_h) && (cvss40.get("CR") == "H" && cvss40.get("VC") == "H") || (cvss40.get("IR") == "H" && vi == vscia_h) || (cvss40.get("AR") == "H" && va == vscia_h) {
+		eq3eq6 = 10
+	} else if !(vc == vscia_h && vi == vscia_h) && (vc == vscia_h || vi == vscia_h || va == vscia_h) && !(cvss40.get("CR") == "H" && cvss40.get("VC") == "H") && !(cvss40.get("IR") == "H" && vi == vscia_h) && !(cvss40.get("AR") == "H" && va == vscia_h) {
+		eq3eq6 = 11
+	} else if !(vc == vscia_h || vi == vscia_h || va == vscia_h) && (cvss40.get("CR") == "H" && cvss40.get("VC") == "H") || (cvss40.get("IR") == "H" && vi == vscia_h) || (cvss40.get("AR") == "H" && va == vscia_h) {
+		eq3eq6 = 20
+	} else if !(vc == vscia_h || vi == vscia_h || va == vscia_h) && !(cvss40.get("CR") == "H" && cvss40.get("VC") == "H") && !(cvss40.get("IR") == "H" && vi == vscia_h) && !(cvss40.get("AR") == "H" && va == vscia_h) {
+		eq3eq6 = 21
+	} else {
+		log.Fatalf("invalid CVSS configuration: CR:%s/VC:%s/IR:%s/VI:%s/AR:%s/VA:%s\n", cvss40.get("CR"), cvss40.get("VC"), cvss40.get("IR"), cvss40.get("VI"), cvss40.get("AR"), cvss40.get("VA"))
+	}
+
+	return float64(eq1) + float64(eq2) + float64(eq3) + float64(eq4) + float64(eq5) + float64(eq6) + float64(eq3eq6)
 }
 
 // Nomenclature returns the CVSS v4.0 configuration used when scoring.

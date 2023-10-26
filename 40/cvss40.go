@@ -1063,7 +1063,10 @@ func (cvss40 *CVSS40) Score() float64 {
 	eq5msd *= eq5prop
 
 	// 2 - Compute mean
-	mean := (eq1msd + eq2msd + eq3eq6msd + eq4msd + eq5msd) / float64(lower)
+	mean := 0.
+	if lower != 0 {
+		mean = (eq1msd + eq2msd + eq3eq6msd + eq4msd + eq5msd) / float64(lower)
+	}
 
 	// 3 - Compute score
 	return roundup(eqsv - mean)

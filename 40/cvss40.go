@@ -1,7 +1,8 @@
 package gocvss40
 
 import (
-	"log"
+	"fmt"
+	"math"
 	"strings"
 	"unsafe"
 )
@@ -137,7 +138,8 @@ func (cvss40 CVSS40) Vector() string {
 	notMandatory(&b, "/RE:", cvss40.get("RE"))
 	notMandatory(&b, "/U:", cvss40.get("U"))
 
-	return unsafe.String(&b[0], l)
+	return *(*string)(unsafe.Pointer(&b))
+	// return unsafe.String(&b[0], l)
 }
 
 func lenVec(cvss40 *CVSS40) int {
@@ -881,36 +883,214 @@ func (cvss40 CVSS40) get(abv string) string {
 	return str
 }
 
+// getComp is used for internal purposes only.
+// It returns the composed value of a metric given its abreviation,
+// i.e. the corresponding Environmental metric if set or the non-X
+// for Threat and Environmental that does not overload the Base metrics.
+// It is only used during *CVSS40.Score calls.
+func (cvss40 CVSS40) getComp(abv string) string {
+	// If a Mxx (Environmental metrics) is set, use it
+	str := cvss40.get("M" + abv)
+	if str != "" && str != "X" {
+		return str
+	}
+	// If a xx (Base metrics) is set, use it
+	str = cvss40.get(abv)
+	if str != "X" {
+		return str
+	}
+	// Last case is defaulting values
+	switch abv {
+	case "CR", "IR", "AR":
+		return "H"
+	case "E":
+		return "A"
+	default:
+		panic("invalid metric abv " + abv)
+	}
+}
+
 // Score returns the CVSS v4.0's score.
 // Use Nomenclature for getting groups used by computation.
-func (cvss40 CVSS40) Score() float64 {
-	// Get metrics
-	// TODO fetch environmental instead when defined
-	// av := mod((cvss40.u0&0b11000000)>>6, (cvss40.u3&0b00001110)>>1)
-	// ac := mod((cvss40.u0&0b00100000)>>5, ((cvss40.u3&0b00000001)<<1)|((cvss40.u4&0b10000000)>>7))
-	// at := mod((cvss40.u0&0b00010000)>>4, (cvss40.u4&0b01100000)>>5)
-	// pr := mod((cvss40.u0&0b00001100)>>2, (cvss40.u4&0b00011000)>>3)
-	// ui := mod(cvss40.u0&0b00000011, (cvss40.u4&0b00000110)>>1)
-	// vc := mod((cvss40.u1&0b11000000)>>6, ((cvss40.u4&0b00000001)<<1)|((cvss40.u5&0b10000000)>>7))
-	// sc := mod((cvss40.u1&0b00110000)>>4, (cvss40.u5&0b00000110)>>1)
-	// vi := mod((cvss40.u1&0b00001100)>>2, (cvss40.u5&0b01100000)>>5)
-	// si := mod(cvss40.u1&0b00000011, ((cvss40.u5&0b00000001)<<2)|((cvss40.u6&0b11000000)>>6))
-	// va := mod((cvss40.u2&0b11000000)>>6, (cvss40.u5&0b00011000)>>3)
-	// sa := mod((cvss40.u2&0b00110000)>>4, (cvss40.u6&0b00111000)>>3)
-	av := (cvss40.u0 & 0b11000000) >> 6
-	ac := (cvss40.u0 & 0b00100000) >> 5
-	at := (cvss40.u0 & 0b00010000) >> 4
-	pr := (cvss40.u0 & 0b00001100) >> 2
-	ui := cvss40.u0 & 0b00000011
-	vc := (cvss40.u1 & 0b11000000) >> 6
-	sc := (cvss40.u1 & 0b00110000) >> 4
-	vi := (cvss40.u1 & 0b00001100) >> 2
-	si := cvss40.u1 & 0b00000011
-	va := (cvss40.u2 & 0b11000000) >> 6
-	sa := (cvss40.u2 & 0b00110000) >> 4
+func (cvss40 *CVSS40) Score() float64 {
+	// If the vulnerability does not affect the system AND the subsequent
+	// system, there is no reason to try scoring what has no risk and impact.
+	if cvss40.u1 == 0b10101010 && (cvss40.u2&0b11110000) == 0b10100000 {
+		return 0.0
+	}
 
-	// Compute EQs
-	// => EQ1 - Table 25
+	eq1, eq2, eq3, eq4, eq5, eq6 := cvss40.macroVector()
+	eqsv := lookupMV(eq1, eq2, eq3, eq4, eq5, eq6)
+
+	// Compute EQs next lower MacroVector
+	// -> As the lower the EQ value is the bigger, the next lower MacroVector
+	//    would be +1 to this one
+	// -> If not possible (level+1 > #level), it is set to NaN
+	lower := 0
+	eq1nlm := math.NaN()
+	if eq1 < 2 { // 2 = maximum level for EQ1
+		eq1nlm = lookupMV(eq1+1, eq2, eq3, eq4, eq5, eq6)
+		lower++
+	}
+	eq2nlm := math.NaN()
+	if eq2 < 1 { // 1 = maximum level for EQ2
+		eq2nlm = lookupMV(eq1, eq2+1, eq3, eq4, eq5, eq6)
+		lower++
+	}
+	eq4nlm := math.NaN()
+	if eq4 < 2 { // 2 = maximum level for EQ4
+		eq4nlm = lookupMV(eq1, eq2, eq3, eq4+1, eq5, eq6)
+		lower++
+	}
+	eq5nlm := math.NaN()
+	if eq5 < 2 { // 2 = maximum level for EQ5
+		eq5nlm = lookupMV(eq1, eq2, eq3, eq4, eq5+1, eq6)
+		lower++
+	}
+	// /!\ As EQ3 and EQ6 are related, we can't do the same as it could produce
+	// eq3=2 and eq6=0 which is impossible thus will have a lookup (for EQ3) of 0.
+	// This would fail the further computations.
+	// TODO demonstrate this is a valid EQ computing, and provide doc in code
+	eq3eq6nlm := math.NaN()
+	if eq3 == 1 && eq6 == 1 {
+		// 11 -> 21
+		eq3eq6nlm = lookupMV(eq1, eq2, eq3+1, eq4, eq5, eq6)
+		lower++
+	} else if eq3 == 0 && eq6 == 1 {
+		// 01 -> 11
+		eq3eq6nlm = lookupMV(eq1, eq2, eq3+1, eq4, eq5, eq6)
+		lower++
+	} else if eq3 == 1 && eq6 == 0 {
+		// 10 -> 11
+		eq3eq6nlm = lookupMV(eq1, eq2, eq3, eq4, eq5, eq6+1)
+		lower++
+	} else if eq3 == 0 && eq6 == 0 {
+		// 00 -> 01 OR 00 -> 10, takes the bigger
+		eq3eq6nlm = max(lookupMV(eq1, eq2, eq3+1, eq4, eq5, eq6), lookupMV(eq1, eq2, eq3, eq4, eq5, eq6+1))
+		lower++
+	}
+
+	// 1.a - Compute maximal scoring (absolute) differences
+	eq1msd := abs(eq1nlm - eqsv)
+	if math.IsNaN(eq1msd) {
+		eq1msd = 0
+	}
+	eq2msd := abs(eq2nlm - eqsv)
+	if math.IsNaN(eq2msd) {
+		eq2msd = 0
+	}
+	eq3eq6msd := abs(eq3eq6nlm - eqsv)
+	if math.IsNaN(eq3eq6msd) {
+		eq3eq6msd = 0
+	}
+	eq4msd := abs(eq4nlm - eqsv)
+	if math.IsNaN(eq4msd) {
+		eq4msd = 0
+	}
+	eq5msd := abs(eq5nlm - eqsv)
+	if math.IsNaN(eq5msd) {
+		eq5msd = 0
+	}
+
+	// 1.b - Compute the severity distances of the to-be scored vectors
+	//       to a highest AND higher severity vector in the MacroVector
+	maxVectors := []string{}
+	for _, eq1mx := range highestSeverityVectors[1][eq1] {
+		for _, eq2mx := range highestSeverityVectors[2][eq2] {
+			for _, eq3eq6mx := range highestSeverityVectorsEQ3EQ6[eq3][eq6] {
+				for _, eq4mx := range highestSeverityVectors[4][eq4] {
+					for _, eq5mx := range highestSeverityVectors[5][eq5] {
+						maxVectors = append(maxVectors, fmt.Sprintf("%s/%s/%s/%s/%s", eq1mx, eq2mx, eq3eq6mx, eq4mx, eq5mx))
+					}
+				}
+			}
+		}
+	}
+	var eq1svdst, eq2svdst, eq3eq6svdst, eq4svdst, eq5svdst float64
+	for _, vec := range maxVectors {
+		// cut max vector
+		mp := map[string]string{}
+		for _, pt := range strings.Split(vec, "/") {
+			k, _, _ := strings.Cut(pt, ":")
+			mp[k] = pt
+		}
+
+		avsvdst := severityDiff(cvss40, mp["AV"])
+		acsvdst := severityDiff(cvss40, mp["AC"])
+		atsvdst := severityDiff(cvss40, mp["AT"])
+		prsvdst := severityDiff(cvss40, mp["PR"])
+		uisvdst := severityDiff(cvss40, mp["UI"])
+		vcsvdst := severityDiff(cvss40, mp["VC"])
+		visvdst := severityDiff(cvss40, mp["VI"])
+		vasvdst := severityDiff(cvss40, mp["VA"])
+		scsvdst := severityDiff(cvss40, mp["SC"])
+		sisvdst := severityDiff(cvss40, mp["SI"])
+		sasvdst := severityDiff(cvss40, mp["SA"])
+		crsvdst := severityDiff(cvss40, mp["CR"])
+		irsvdst := severityDiff(cvss40, mp["IR"])
+		arsvdst := severityDiff(cvss40, mp["AR"])
+
+		if avsvdst < 0 || prsvdst < 0 || uisvdst < 0 ||
+			acsvdst < 0 || atsvdst < 0 ||
+			vcsvdst < 0 || visvdst < 0 || vasvdst < 0 ||
+			scsvdst < 0 || sisvdst < 0 || sasvdst < 0 ||
+			crsvdst < 0 || irsvdst < 0 || arsvdst < 0 {
+			continue
+		}
+
+		eq1svdst = avsvdst + prsvdst + uisvdst
+		eq2svdst = acsvdst + atsvdst
+		eq3eq6svdst = vcsvdst + visvdst + vasvdst + crsvdst + irsvdst + arsvdst
+		eq4svdst = scsvdst + sisvdst + sasvdst
+		// Don't need to compute E severity distance as the maximum will
+		// always remain the same due to only 1 dimension involved in EQ5.
+		eq5svdst = 0
+		break
+	}
+
+	// 1.c - Compute proportion of the distance
+	eq1prop := eq1svdst / (getDepth(1, eq1) + 1)
+	eq2prop := eq2svdst / (getDepth(2, eq2) + 1)
+	eq3eq6prop := eq3eq6svdst / (getDepthEQ3EQ6(eq3, eq6) + 1)
+	eq4prop := eq4svdst / (getDepth(4, eq4) + 1)
+	eq5prop := eq5svdst / (getDepth(5, eq5) + 1)
+
+	// 1.d - Multiply maximal scoring diff. by prop. of distance
+	eq1msd *= eq1prop
+	eq2msd *= eq2prop
+	eq3eq6msd *= eq3eq6prop
+	eq4msd *= eq4prop
+	eq5msd *= eq5prop
+
+	// 2 - Compute mean
+	mean := (eq1msd + eq2msd + eq3eq6msd + eq4msd + eq5msd) / float64(lower)
+
+	// 3 - Compute score
+	return roundup(eqsv - mean)
+}
+
+func (cvss40 CVSS40) macroVector() (int, int, int, int, int, int) {
+	// Get metrics
+	av := mod((cvss40.u0&0b11000000)>>6, (cvss40.u3&0b00001110)>>1)
+	ac := mod((cvss40.u0&0b00100000)>>5, ((cvss40.u3&0b00000001)<<1)|((cvss40.u4&0b10000000)>>7))
+	at := mod((cvss40.u0&0b00010000)>>4, (cvss40.u4&0b01100000)>>5)
+	pr := mod((cvss40.u0&0b00001100)>>2, (cvss40.u4&0b00011000)>>3)
+	ui := mod(cvss40.u0&0b00000011, (cvss40.u4&0b00000110)>>1)
+	vc := mod((cvss40.u1&0b11000000)>>6, ((cvss40.u4&0b00000001)<<1)|((cvss40.u5&0b10000000)>>7))
+	sc := mod((cvss40.u1&0b00110000)>>4, (cvss40.u5&0b00000110)>>1)
+	vi := mod((cvss40.u1&0b00001100)>>2, (cvss40.u5&0b01100000)>>5)
+	msi := ((cvss40.u5 & 0b00000001) << 2) | ((cvss40.u6 & 0b11000000) >> 6)
+	si := mod(cvss40.u1&0b00000011, msi)
+	va := mod((cvss40.u2&0b11000000)>>6, (cvss40.u5&0b00011000)>>3)
+	msa := (cvss40.u6 & 0b00111000) >> 3
+	sa := mod((cvss40.u2&0b00110000)>>4, msa)
+	e := (cvss40.u2 & 0b00001100) >> 2
+	cr := cvss40.u2 & 0b00000011
+	ir := (cvss40.u3 & 0b11000000) >> 6
+	ar := (cvss40.u3 & 0b00110000) >> 4
+
+	// Compute MacroVectors
+	// => EQ1
 	eq1 := 0
 	if av == av_n && pr == pr_n && ui == ui_n {
 		eq1 = 0
@@ -918,19 +1098,15 @@ func (cvss40 CVSS40) Score() float64 {
 		eq1 = 1
 	} else if av == av_p || !(av == av_n || pr == pr_n || ui == ui_n) {
 		eq1 = 2
-	} else {
-		log.Fatalf("invalid CVSS configuration: AV:%s/PR:%s/UI:%s\n", cvss40.get("AV"), cvss40.get("PR"), cvss40.get("UI"))
 	}
-	// => EQ2 - Table 26
+
+	// => EQ2
 	eq2 := 0
-	if ac == ac_l && at == at_n {
-		eq2 = 0
-	} else if !(ac == ac_l && at == at_n) {
+	if !(ac == ac_l && at == at_n) {
 		eq2 = 1
-	} else {
-		log.Fatalf("invalid CVSS configuration: AC:%s/AT:%s\n", cvss40.get("AC"), cvss40.get("AT"))
 	}
-	// => EQ3 - Table 27
+
+	// => EQ3
 	eq3 := 0
 	if vc == vscia_h && vi == vscia_h {
 		eq3 = 0
@@ -938,59 +1114,53 @@ func (cvss40 CVSS40) Score() float64 {
 		eq3 = 1
 	} else if !(vc == vscia_h || vi == vscia_h || va == vscia_h) {
 		eq3 = 2
-	} else {
-		log.Fatalf("invalid CVSS configuration: VC:%s/VI:%s/VA:%s\n", cvss40.get("VC"), cvss40.get("VI"), cvss40.get("VA"))
-	}
-	// => EQ4 - Table 28
-	eq4 := 0
-	if cvss40.get("MSI") == "S" || cvss40.get("MSA") == "S" {
-		eq4 = 0
-	} else if !(cvss40.get("MSI") == "S" && cvss40.get("MSA") == "S") && (sc == vscia_h || si == vscia_h || sa == vscia_h) {
-		eq4 = 1
-	} else if !(cvss40.get("MSI") == "S" && cvss40.get("MSA") == "S") && !(sc == vscia_h || si == vscia_h || sa == vscia_h) {
-		eq4 = 2
-	} else {
-		log.Fatalf("invalid CVSS configuration: MSI:%s/MSA:%s/SC:%s/SI:%s/SA:%s\n", cvss40.get("MSI"), cvss40.get("MSA"), cvss40.get("SC"), cvss40.get("SI"), cvss40.get("SA"))
-	}
-	// => EQ5 - Table 29
-	eq5 := 0
-	if cvss40.get("E") == "A" {
-		eq5 = 0
-	} else if cvss40.get("E") == "P" {
-		eq5 = 1
-	} else if cvss40.get("E") == "U" {
-		eq5 = 2
-	} else {
-		log.Fatalf("invalid CVSS configuration: E:%s\n", cvss40.get("E"))
-	}
-	// => EQ6 - Table 30
-	eq6 := 0
-	if av == av_n && pr == pr_n && ui == ui_n {
-		eq6 = 0
-	} else if (cvss40.get("CR") == "H" && cvss40.get("VC") == "H") || (cvss40.get("IR") == "H" && vi == vscia_h) || (cvss40.get("AR") == "H" && va == vscia_h) {
-		eq6 = 1
-	} else {
-		log.Fatalf("invalid CVSS configuration: AV:%s/PR:%s/UI:%s/CR:%s/VC:%s/IR:%s/VI:%s/AR:%s/VA:%s\n", cvss40.get("AV"), cvss40.get("PR"), cvss40.get("UI"), cvss40.get("CR"), cvss40.get("VC"), cvss40.get("IR"), cvss40.get("VI"), cvss40.get("AR"), cvss40.get("VA"))
-	}
-	// => EQ3+EQ6 - Table 31
-	eq3eq6 := 0
-	if vc == vscia_h && vi == vscia_h && (cvss40.get("CR") == "H" || cvss40.get("IR") == "H" || (cvss40.get("AR") == "H" && va == vscia_h)) {
-		eq3eq6 = 00
-	} else if vc == vscia_h && vi == vscia_h && !(cvss40.get("CR") == "H" || cvss40.get("IR") == "H") && !(cvss40.get("AR") == "H" && va == vscia_h) {
-		eq3eq6 = 01
-	} else if !(vc == vscia_h && vi == vscia_h) && (vc == vscia_h || vi == vscia_h || va == vscia_h) && (cvss40.get("CR") == "H" && cvss40.get("VC") == "H") || (cvss40.get("IR") == "H" && vi == vscia_h) || (cvss40.get("AR") == "H" && va == vscia_h) {
-		eq3eq6 = 10
-	} else if !(vc == vscia_h && vi == vscia_h) && (vc == vscia_h || vi == vscia_h || va == vscia_h) && !(cvss40.get("CR") == "H" && cvss40.get("VC") == "H") && !(cvss40.get("IR") == "H" && vi == vscia_h) && !(cvss40.get("AR") == "H" && va == vscia_h) {
-		eq3eq6 = 11
-	} else if !(vc == vscia_h || vi == vscia_h || va == vscia_h) && (cvss40.get("CR") == "H" && cvss40.get("VC") == "H") || (cvss40.get("IR") == "H" && vi == vscia_h) || (cvss40.get("AR") == "H" && va == vscia_h) {
-		eq3eq6 = 20
-	} else if !(vc == vscia_h || vi == vscia_h || va == vscia_h) && !(cvss40.get("CR") == "H" && cvss40.get("VC") == "H") && !(cvss40.get("IR") == "H" && vi == vscia_h) && !(cvss40.get("AR") == "H" && va == vscia_h) {
-		eq3eq6 = 21
-	} else {
-		log.Fatalf("invalid CVSS configuration: CR:%s/VC:%s/IR:%s/VI:%s/AR:%s/VA:%s\n", cvss40.get("CR"), cvss40.get("VC"), cvss40.get("IR"), cvss40.get("VI"), cvss40.get("AR"), cvss40.get("VA"))
 	}
 
-	return float64(eq1) + float64(eq2) + float64(eq3) + float64(eq4) + float64(eq5) + float64(eq6) + float64(eq3eq6)
+	// => EQ4
+	eq4 := 0
+	if msi == msia_s || msa == msia_s {
+		eq4 = 0
+	} else if !(msi == msia_s || msa == msia_s) && (sc == vscia_h || si == vscia_h || sa == vscia_h) {
+		eq4 = 1
+	} else if !(msi == msia_s || msa == msia_s) && !(sc == vscia_h || si == vscia_h || sa == vscia_h) {
+		eq4 = 2
+	}
+
+	// => EQ5
+	eq5 := 0
+	if e == e_a || e == e_x { // check if X too, worst case is lower value
+		eq5 = 0
+	} else if e == e_p {
+		eq5 = 1
+	} else if e == e_u {
+		eq5 = 2
+	}
+
+	// => EQ6
+	eq6 := 0
+	crh := (cr == ciar_h || cr == ciar_x)
+	irh := (ir == ciar_h || ir == ciar_x)
+	arh := (ar == ciar_h || ar == ciar_x)
+	if (crh && vc == vscia_h) || (irh && vi == vscia_h) || (arh && va == vscia_h) {
+		eq6 = 0
+	} else if !(crh && vc == vscia_h) && !(irh && vi == vscia_h) && !(arh && va == vscia_h) {
+		eq6 = 1
+	}
+
+	return eq1, eq2, eq3, eq4, eq5, eq6
+}
+
+func mod(base, modified uint8) uint8 {
+	// If "modified" is different of 0, it is different of "X"
+	// => shift to one before (skip X index)
+	if modified != 0 {
+		return modified - 1
+	}
+	return base
+}
+
+func roundup(x float64) float64 {
+	return math.Round(x*10) / 10
 }
 
 // Nomenclature returns the CVSS v4.0 configuration used when scoring.

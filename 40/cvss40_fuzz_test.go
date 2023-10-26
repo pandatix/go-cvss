@@ -76,8 +76,12 @@ func FuzzParseVector(f *testing.F) {
 		}
 
 		// Compute score
-		// cvss40.Score()
+		score := cvss40.Score()
+		if score < 0.0 || score > 10.0 {
+			t.Fatalf("score is out of bounds: %.1f", score)
+		}
 
+		// Ensure produced string vector is valid
 		cvss40vector := cvss40.Vector()
 		newCVSS40, _ := ParseVector(cvss40vector)
 		if !reflect.DeepEqual(cvss40, newCVSS40) {

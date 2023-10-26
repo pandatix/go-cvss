@@ -20,9 +20,9 @@ func Test_U_DepthEQ1(t *testing.T) {
 		for _, pr := range prs {
 			for _, ui := range uis {
 				vec := &CVSS40{}
-				vec.Set("AV", av)
-				vec.Set("PR", pr)
-				vec.Set("UI", ui)
+				_ = vec.Set("AV", av)
+				_ = vec.Set("PR", pr)
+				_ = vec.Set("UI", ui)
 				combs = append(combs, vec)
 			}
 		}
@@ -70,8 +70,8 @@ func Test_U_DepthEQ2(t *testing.T) {
 	for _, ac := range acs {
 		for _, at := range ats {
 			vec := &CVSS40{}
-			vec.Set("AC", ac)
-			vec.Set("AT", at)
+			_ = vec.Set("AC", ac)
+			_ = vec.Set("AT", at)
 			combs = append(combs, vec)
 		}
 	}
@@ -121,9 +121,9 @@ func Test_U_DepthEQ4(t *testing.T) {
 		for _, msi := range msis {
 			for _, msa := range msas {
 				vec := &CVSS40{}
-				vec.Set("SC", sc)
-				vec.Set("MSI", msi)
-				vec.Set("MSA", msa)
+				_ = vec.Set("SC", sc)
+				_ = vec.Set("MSI", msi)
+				_ = vec.Set("MSA", msa)
 				combs = append(combs, vec)
 			}
 		}
@@ -169,7 +169,7 @@ func Test_U_DepthEQ5(t *testing.T) {
 	combs := make([]*CVSS40, 0, len(es))
 	for _, e := range es {
 		vec := &CVSS40{}
-		vec.Set("E", e)
+		_ = vec.Set("E", e)
 		combs = append(combs, vec)
 	}
 	mvs := map[int][]*CVSS40{}
@@ -223,12 +223,12 @@ func Test_U_DepthEQ3EQ6(t *testing.T) {
 					for _, ir := range irs {
 						for _, ar := range ars {
 							vec := &CVSS40{}
-							vec.Set("VC", vc)
-							vec.Set("VI", vi)
-							vec.Set("VA", va)
-							vec.Set("CR", cr)
-							vec.Set("IR", ir)
-							vec.Set("AR", ar)
+							_ = vec.Set("VC", vc)
+							_ = vec.Set("VI", vi)
+							_ = vec.Set("VA", va)
+							_ = vec.Set("CR", cr)
+							_ = vec.Set("IR", ir)
+							_ = vec.Set("AR", ar)
 							combs = append(combs, vec)
 						}
 					}

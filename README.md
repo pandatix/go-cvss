@@ -205,11 +205,12 @@ goos: linux
 goarch: amd64
 pkg: github.com/pandatix/go-cvss/40
 cpu: 11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz
-BenchmarkParseVector_B-12                    4363825           276.7 ns/op        16 B/op          1 allocs/op
-BenchmarkParseVector_BTES-12                 1304852           896.8 ns/op        16 B/op          1 allocs/op
-BenchmarkCVSS40Vector-12                     3962140           320.7 ns/op       192 B/op          1 allocs/op
-BenchmarkCVSS40Get-12                      300182163           3.900 ns/op         0 B/op          0 allocs/op
-BenchmarkCVSS40Set-12                      112736655           10.69 ns/op         0 B/op          0 allocs/op
+BenchmarkParseVector_B-12                    3038960           402.7 ns/op        16 B/op          1 allocs/op
+BenchmarkParseVector_BTES-12                  931626            1124 ns/op        16 B/op          1 allocs/op
+BenchmarkCVSS40Vector-12                     2162690           604.2 ns/op       192 B/op          1 allocs/op
+BenchmarkCVSS40Get-12                      219190380           5.748 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS40Set-12                      114939408           10.67 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS40Score-12                      1132005            1286 ns/op         0 B/op          0 allocs/op
 ```
 
 ### How it works

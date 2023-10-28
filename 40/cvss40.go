@@ -967,7 +967,11 @@ func (cvss40 *CVSS40) Score() float64 {
 		lower++
 	} else if eq3 == 0 && eq6 == 0 {
 		// 00 -> 01 OR 00 -> 10, takes the bigger
-		eq3eq6nlm = max(lookupMV(eq1, eq2, eq3+1, eq4, eq5, eq6), lookupMV(eq1, eq2, eq3, eq4, eq5, eq6+1))
+		eq3eq6nlm = lookupMV(eq1, eq2, eq3+1, eq4, eq5, eq6)
+		eq6nlm := lookupMV(eq1, eq2, eq3, eq4, eq5, eq6+1)
+		if eq6nlm > eq3eq6nlm {
+			eq3eq6nlm = eq6nlm
+		}
 		lower++
 	}
 

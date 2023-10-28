@@ -1,6 +1,7 @@
 package gocvss40
 
 import (
+	"math"
 	"reflect"
 	"regexp"
 	"testing"
@@ -77,7 +78,7 @@ func FuzzParseVector(f *testing.F) {
 
 		// Compute score
 		score := cvss40.Score()
-		if score < 0.0 || score > 10.0 {
+		if score < 0.0 || score > 10.0 || math.IsNaN(score) {
 			t.Fatalf("score is out of bounds: %.1f", score)
 		}
 

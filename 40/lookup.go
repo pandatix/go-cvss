@@ -1,10 +1,43 @@
 package gocvss40
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+	"unsafe"
+)
+
+var lookupPool = sync.Pool{
+	New: func() any {
+		return make([]byte, 6)
+	},
+}
 
 func lookupMV(eq1, eq2, eq3, eq4, eq5, eq6 int) float64 {
-	// TODO implement using waterfall switches for 0-allocs, auto-generate code (for reproductibility and maintainability)
-	return lookup[fmt.Sprintf("%d%d%d%d%d%d", eq1, eq2, eq3, eq4, eq5, eq6)]
+	br := lookupPool.Get()
+	defer lookupPool.Put(br)
+	b := br.([]byte)
+
+	b[0] = itoa(eq1)
+	b[1] = itoa(eq2)
+	b[2] = itoa(eq3)
+	b[3] = itoa(eq4)
+	b[4] = itoa(eq5)
+	b[5] = itoa(eq6)
+	key := *(*string)(unsafe.Pointer(&b))
+
+	return lookup[key]
+}
+
+func itoa(i int) byte {
+	switch i {
+	case 0:
+		return '0'
+	case 1:
+		return '1'
+	case 2:
+		return '2'
+	}
+	panic(fmt.Sprintf("impossible value: %d", i))
 }
 
 // For the explanation of those lookup values, refer to Section 8.1.

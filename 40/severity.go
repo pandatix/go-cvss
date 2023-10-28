@@ -2,89 +2,45 @@ package gocvss40
 
 import (
 	"fmt"
-	"strings"
 )
 
 var (
-	sevIdx = map[string][]string{
+	sevIdx = map[uint8][]uint8{
 		// Base metrics
-		"AV": {"N", "A", "L", "P"},
-		"AC": {"L", "H"},
-		"AT": {"N", "P"},
-		"PR": {"N", "L", "H"},
-		"UI": {"N", "P", "A"},
-		"VC": {"H", "L", "N"},
-		"VI": {"H", "L", "N"},
-		"VA": {"H", "L", "N"},
-		"SC": {"H", "L", "N"},
-		"SI": {"S", "H", "L", "N"},
-		"SA": {"S", "H", "L", "N"},
+		av: {av_n, av_a, av_l, av_p},
+		ac: {ac_l, ac_h},
+		at: {at_n, at_p},
+		pr: {pr_n, pr_l, pr_h},
+		ui: {ui_n, ui_p, ui_a},
+		vc: {vscia_h, vscia_l, vscia_n},
+		vi: {vscia_h, vscia_l, vscia_n},
+		va: {vscia_h, vscia_l, vscia_n},
+		sc: {vscia_h, vscia_l, vscia_n},
+		si: {vscia_s, vscia_h, vscia_l, vscia_n},
+		sa: {vscia_s, vscia_h, vscia_l, vscia_n},
 		// Threat metrics
-		"E": {"A", "P", "U"},
+		e: {e_a, e_p, e_u},
 		// Environmental metrics
-		"CR":  {"H", "M", "L"},
-		"IR":  {"H", "M", "L"},
-		"AR":  {"H", "M", "L"},
-		"MAV": {"N", "A", "L", "P"},
-		"MAC": {"L", "H"},
-		"MAT": {"N", "P"},
-		"MPR": {"N", "L", "H"},
-		"MUI": {"N", "P", "A"},
-		"MVC": {"H", "L", "N"},
-		"MVI": {"H", "L", "N"},
-		"MVA": {"H", "L", "N"},
-		"MSC": {"N", "L", "H"},
-		"MSI": {"N", "L", "H", "S"},
-		"MSA": {"N", "L", "H", "S"},
+		cr: {ciar_h, ciar_m, ciar_l},
+		ir: {ciar_h, ciar_m, ciar_l},
+		ar: {ciar_h, ciar_m, ciar_l},
 	}
 )
 
-func severityDiff(vec *CVSS40, metric string) float64 {
-	k, v, _ := strings.Cut(metric, ":")
-	vek := vec.getComp(k)
-	return findSev(k, vek) - findSev(k, v)
-}
-
-// Computes the severity distance between a partial vector and an
-// already-parsed CVSS v4.0 vector.
+// Computes the severity distance between a two values of the same metric.
 // Used for regression testing during depths computation.
-func severityDistance(vec *CVSS40, partial string) float64 {
-	mp := sevSplit(partial)
-
-	dst := 0.0
-	for k := range mp {
-		tmp := vec.getComp(k)
-		v1 := findSev(k, tmp)
-		v2 := findSev(k, mp[k])
-
-		dst += abs(v1 - v2)
-	}
-	return dst
+func severityDistance(metric uint8, vecVal, mxVal uint8) float64 {
+	values := sevIdx[metric]
+	return index(values, vecVal) - index(values, mxVal)
 }
 
-func sevSplit(vec string) map[string]string {
-	mp := map[string]string{}
-	pts := strings.Split(vec, "/")
-	for _, pt := range pts {
-		m, v, _ := strings.Cut(pt, ":")
-		mp[m] = v
-	}
-	return mp
-}
-
-func findSev(k, v string) float64 {
-	slc := sevIdx[k]
-	for i, e := range slc {
-		if e == v {
-			return float64(i)
+func index(slc []uint8, val uint8) float64 {
+	i := 0.
+	for _, v := range slc {
+		if v == val {
+			return i
 		}
+		i++
 	}
-	panic(fmt.Sprintf("not found %v for %s", v, k))
-}
-
-func abs[T int | float64](i T) T {
-	if i < 0 {
-		return -i
-	}
-	return i
+	panic(fmt.Sprintf("did not find %v in %v", val, slc))
 }

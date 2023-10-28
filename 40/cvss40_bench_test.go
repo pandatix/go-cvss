@@ -66,3 +66,15 @@ func BenchmarkCVSS40Set(b *testing.B) {
 	}
 	Gerr = err
 }
+
+var Gscore float64
+
+func BenchmarkCVSS40Score(b *testing.B) {
+	cvss40, _ := gocvss40.ParseVector("CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P/CR:H/IR:H/AR:H")
+	var score float64
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		score = cvss40.Score()
+	}
+	Gscore = score
+}

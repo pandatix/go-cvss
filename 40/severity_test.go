@@ -1,6 +1,8 @@
 package gocvss40
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -47,9 +49,110 @@ func Test_U_SeverityDistance(t *testing.T) {
 		t.Run(testname, func(t *testing.T) {
 			assert := assert.New(t)
 
-			dst := severityDistance(tt.Vector, tt.Partial)
+			dst := severityDistanceRaw(tt.Vector, tt.Partial)
 
 			assert.Equal(tt.ExpectedSevDist, dst)
 		})
+	}
+}
+
+func severityDistanceRaw(vec *CVSS40, partial string) float64 {
+	// Split parts
+	pts := map[string]uint8{}
+	for _, pt := range strings.Split(partial, "/") {
+		k, v, _ := strings.Cut(pt, ":")
+		pts[k] = indexMetricValue(k, v)
+	}
+
+	// Compute overall distance
+	dst := 0.
+	for k, v := range pts {
+		vecVal := indexMetricValue(k, vec.getComp(k))
+		dst += abs(severityDistance(indexMetric(k), vecVal, v))
+	}
+	return dst
+}
+
+func indexMetric(k string) uint8 {
+	switch k {
+	case "AV":
+		return av
+	case "AC":
+		return ac
+	case "AT":
+		return at
+	case "PR":
+		return pr
+	case "UI":
+		return ui
+	case "VC":
+		return vc
+	case "VI":
+		return vi
+	case "VA":
+		return va
+	case "SC":
+		return sc
+	case "SI":
+		return si
+	case "SA":
+		return sa
+	case "E":
+		return e
+	case "CR":
+		return cr
+	case "IR":
+		return ir
+	case "AR":
+		return ar
+	}
+	panic(fmt.Sprintf("invalid metric %v", k))
+}
+
+func indexMetricValue(k, v string) uint8 {
+	slc := map[uint8][]string{
+		av: {"N", "A", "L", "P"},
+		ac: {"L", "H"},
+		at: {"N", "P"},
+		pr: {"N", "L", "H"},
+		ui: {"N", "P", "A"},
+		vc: {"H", "L", "N"},
+		vi: {"H", "L", "N"},
+		va: {"H", "L", "N"},
+		sc: {"H", "L", "N"},
+		si: {"H", "L", "N", "S"},
+		sa: {"H", "L", "N", "S"},
+		e:  {"X", "A", "P", "U"},
+		cr: {"X", "H", "M", "L"},
+		ir: {"X", "H", "M", "L"},
+		ar: {"X", "H", "M", "L"},
+	}[indexMetric(k)]
+	for i := 0; i < len(slc); i++ {
+		if slc[i] == v {
+			return uint8(i)
+		}
+	}
+	panic(fmt.Sprintf("invalid metric value %s for %s", v, k))
+}
+
+func (vec *CVSS40) getComp(k string) string {
+	// If a Mxx (Environmental metrics) is set, use it
+	str := vec.get("M" + k)
+	if str != "" && str != "X" {
+		return str
+	}
+	// If a xx (Base metrics) is set, use it
+	str = vec.get(k)
+	if str != "X" {
+		return str
+	}
+	// Last case is defaulting values
+	switch k {
+	case "CR", "IR", "AR":
+		return "H"
+	case "E":
+		return "A"
+	default:
+		panic("invalid metric abv " + k)
 	}
 }

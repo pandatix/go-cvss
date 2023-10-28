@@ -1,7 +1,6 @@
 package gocvss40
 
 import (
-	"fmt"
 	"math"
 	"strings"
 	"unsafe"
@@ -56,7 +55,11 @@ func ParseVector(vector string) (*CVSS40, error) {
 		}
 
 		// Remove leading /
-		pt := vector[cut:min(i, len(vector))]
+		m := i
+		if len(vector) < i {
+			m = len(vector)
+		}
+		pt := vector[cut:m]
 		cut = i
 		if !strings.HasPrefix(pt, "/") {
 			return nil, ErrInvalidMetricValue
@@ -883,33 +886,6 @@ func (cvss40 CVSS40) get(abv string) string {
 	return str
 }
 
-// getComp is used for internal purposes only.
-// It returns the composed value of a metric given its abreviation,
-// i.e. the corresponding Environmental metric if set or the non-X
-// for Threat and Environmental that does not overload the Base metrics.
-// It is only used during *CVSS40.Score calls.
-func (cvss40 CVSS40) getComp(abv string) string {
-	// If a Mxx (Environmental metrics) is set, use it
-	str := cvss40.get("M" + abv)
-	if str != "" && str != "X" {
-		return str
-	}
-	// If a xx (Base metrics) is set, use it
-	str = cvss40.get(abv)
-	if str != "X" {
-		return str
-	}
-	// Last case is defaulting values
-	switch abv {
-	case "CR", "IR", "AR":
-		return "H"
-	case "E":
-		return "A"
-	default:
-		panic("invalid metric abv " + abv)
-	}
-}
-
 // Score returns the CVSS v4.0's score.
 // Use Nomenclature for getting groups used by computation.
 func (cvss40 *CVSS40) Score() float64 {
@@ -917,6 +893,31 @@ func (cvss40 *CVSS40) Score() float64 {
 	// system, there is no reason to try scoring what has no risk and impact.
 	if cvss40.u1 == 0b10101010 && (cvss40.u2&0b11110000) == 0b10100000 {
 		return 0.0
+	}
+
+	// Get metrics
+	avVal := mod((cvss40.u0&0b11000000)>>6, (cvss40.u3&0b00001110)>>1)
+	acVal := mod((cvss40.u0&0b00100000)>>5, ((cvss40.u3&0b00000001)<<1)|((cvss40.u4&0b10000000)>>7))
+	atVal := mod((cvss40.u0&0b00010000)>>4, (cvss40.u4&0b01100000)>>5)
+	prVal := mod((cvss40.u0&0b00001100)>>2, (cvss40.u4&0b00011000)>>3)
+	uiVal := mod(cvss40.u0&0b00000011, (cvss40.u4&0b00000110)>>1)
+	vcVal := mod((cvss40.u1&0b11000000)>>6, ((cvss40.u4&0b00000001)<<1)|((cvss40.u5&0b10000000)>>7))
+	scVal := mod((cvss40.u1&0b00110000)>>4, (cvss40.u5&0b00000110)>>1)
+	viVal := mod((cvss40.u1&0b00001100)>>2, (cvss40.u5&0b01100000)>>5)
+	siVal := mod(cvss40.u1&0b00000011, ((cvss40.u5&0b00000001)<<2)|((cvss40.u6&0b11000000)>>6))
+	vaVal := mod((cvss40.u2&0b11000000)>>6, (cvss40.u5&0b00011000)>>3)
+	saVal := mod((cvss40.u2&0b00110000)>>4, (cvss40.u6&0b00111000)>>3)
+	crVal := cvss40.u2 & 0b00000011
+	if crVal == ciar_x {
+		crVal = ciar_h
+	}
+	irVal := (cvss40.u3 & 0b11000000) >> 6
+	if irVal == ciar_x {
+		irVal = ciar_h
+	}
+	arVal := (cvss40.u3 & 0b00110000) >> 4
+	if arVal == ciar_x {
+		arVal = ciar_h
 	}
 
 	eq1, eq2, eq3, eq4, eq5, eq6 := cvss40.macroVector()
@@ -994,58 +995,65 @@ func (cvss40 *CVSS40) Score() float64 {
 
 	// 1.b - Compute the severity distances of the to-be scored vectors
 	//       to a highest AND higher severity vector in the MacroVector
-	maxVectors := []string{}
+	var eq1svdst, eq2svdst, eq3eq6svdst, eq4svdst, eq5svdst float64
 	for _, eq1mx := range highestSeverityVectors[1][eq1] {
 		for _, eq2mx := range highestSeverityVectors[2][eq2] {
 			for _, eq3eq6mx := range highestSeverityVectorsEQ3EQ6[eq3][eq6] {
 				for _, eq4mx := range highestSeverityVectors[4][eq4] {
-					for _, eq5mx := range highestSeverityVectors[5][eq5] {
-						maxVectors = append(maxVectors, fmt.Sprintf("%s/%s/%s/%s/%s", eq1mx, eq2mx, eq3eq6mx, eq4mx, eq5mx))
+					// EQ1
+					avmx := uint8((eq1mx % 1000) / 100)
+					prmx := uint8((eq1mx % 100) / 10)
+					uimx := uint8((eq1mx % 10) / 1)
+					// EQ2
+					acmx := uint8((eq2mx % 100) / 10)
+					atmx := uint8((eq2mx % 10) / 1)
+					// EQ3EQ6
+					vcmx := uint8((eq3eq6mx % 1000000) / 100000)
+					vimx := uint8((eq3eq6mx % 100000) / 10000)
+					vamx := uint8((eq3eq6mx % 10000) / 1000)
+					crmx := uint8((eq3eq6mx % 1000) / 100)
+					irmx := uint8((eq3eq6mx % 100) / 10)
+					armx := uint8((eq3eq6mx % 10) / 1)
+					// EQ4
+					scmx := uint8((eq4mx % 1000) / 100)
+					simx := uint8((eq4mx % 100) / 10)
+					samx := uint8((eq4mx % 10) / 1)
+
+					// Compute severity distances
+					avsvdst := severityDistance(av, avVal, avmx)
+					acsvdst := severityDistance(ac, acVal, acmx)
+					atsvdst := severityDistance(at, atVal, atmx)
+					prsvdst := severityDistance(pr, prVal, prmx)
+					uisvdst := severityDistance(ui, uiVal, uimx)
+					vcsvdst := severityDistance(vc, vcVal, vcmx)
+					visvdst := severityDistance(vi, viVal, vimx)
+					vasvdst := severityDistance(va, vaVal, vamx)
+					scsvdst := severityDistance(sc, scVal, scmx)
+					sisvdst := severityDistance(si, siVal, simx)
+					sasvdst := severityDistance(sa, saVal, samx)
+					crsvdst := severityDistance(cr, crVal, crmx)
+					irsvdst := severityDistance(ir, irVal, irmx)
+					arsvdst := severityDistance(ar, arVal, armx)
+
+					if avsvdst < 0 || prsvdst < 0 || uisvdst < 0 ||
+						acsvdst < 0 || atsvdst < 0 ||
+						vcsvdst < 0 || visvdst < 0 || vasvdst < 0 ||
+						scsvdst < 0 || sisvdst < 0 || sasvdst < 0 ||
+						crsvdst < 0 || irsvdst < 0 || arsvdst < 0 {
+						continue
 					}
+
+					eq1svdst = avsvdst + prsvdst + uisvdst
+					eq2svdst = acsvdst + atsvdst
+					eq3eq6svdst = vcsvdst + visvdst + vasvdst + crsvdst + irsvdst + arsvdst
+					eq4svdst = scsvdst + sisvdst + sasvdst
+					// Don't need to compute E severity distance as the maximum will
+					// always remain the same due to only 1 dimension involved in EQ5.
+					eq5svdst = 0
+					break
 				}
 			}
 		}
-	}
-	var eq1svdst, eq2svdst, eq3eq6svdst, eq4svdst, eq5svdst float64
-	for _, vec := range maxVectors {
-		// cut max vector
-		mp := map[string]string{}
-		for _, pt := range strings.Split(vec, "/") {
-			k, _, _ := strings.Cut(pt, ":")
-			mp[k] = pt
-		}
-
-		avsvdst := severityDiff(cvss40, mp["AV"])
-		acsvdst := severityDiff(cvss40, mp["AC"])
-		atsvdst := severityDiff(cvss40, mp["AT"])
-		prsvdst := severityDiff(cvss40, mp["PR"])
-		uisvdst := severityDiff(cvss40, mp["UI"])
-		vcsvdst := severityDiff(cvss40, mp["VC"])
-		visvdst := severityDiff(cvss40, mp["VI"])
-		vasvdst := severityDiff(cvss40, mp["VA"])
-		scsvdst := severityDiff(cvss40, mp["SC"])
-		sisvdst := severityDiff(cvss40, mp["SI"])
-		sasvdst := severityDiff(cvss40, mp["SA"])
-		crsvdst := severityDiff(cvss40, mp["CR"])
-		irsvdst := severityDiff(cvss40, mp["IR"])
-		arsvdst := severityDiff(cvss40, mp["AR"])
-
-		if avsvdst < 0 || prsvdst < 0 || uisvdst < 0 ||
-			acsvdst < 0 || atsvdst < 0 ||
-			vcsvdst < 0 || visvdst < 0 || vasvdst < 0 ||
-			scsvdst < 0 || sisvdst < 0 || sasvdst < 0 ||
-			crsvdst < 0 || irsvdst < 0 || arsvdst < 0 {
-			continue
-		}
-
-		eq1svdst = avsvdst + prsvdst + uisvdst
-		eq2svdst = acsvdst + atsvdst
-		eq3eq6svdst = vcsvdst + visvdst + vasvdst + crsvdst + irsvdst + arsvdst
-		eq4svdst = scsvdst + sisvdst + sasvdst
-		// Don't need to compute E severity distance as the maximum will
-		// always remain the same due to only 1 dimension involved in EQ5.
-		eq5svdst = 0
-		break
 	}
 
 	// 1.c - Compute proportion of the distance
@@ -1074,6 +1082,7 @@ func (cvss40 *CVSS40) Score() float64 {
 
 func (cvss40 CVSS40) macroVector() (int, int, int, int, int, int) {
 	// Get metrics
+	// XXX duplicated code block
 	av := mod((cvss40.u0&0b11000000)>>6, (cvss40.u3&0b00001110)>>1)
 	ac := mod((cvss40.u0&0b00100000)>>5, ((cvss40.u3&0b00000001)<<1)|((cvss40.u4&0b10000000)>>7))
 	at := mod((cvss40.u0&0b00010000)>>4, (cvss40.u4&0b01100000)>>5)
@@ -1160,6 +1169,13 @@ func mod(base, modified uint8) uint8 {
 		return modified - 1
 	}
 	return base
+}
+
+func abs(x float64) float64 {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
 
 func roundup(x float64) float64 {

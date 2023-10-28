@@ -39,7 +39,7 @@ func Test_U_DepthEQ1(t *testing.T) {
 		// 1. Find the min/max distances in this MacroVector
 		min, max := 99., 0.
 		for _, vec := range mv {
-			d := severityDistance(vec, "AV:N/PR:N/UI:N")
+			d := severityDistanceRaw(vec, "AV:N/PR:N/UI:N")
 			if d < min {
 				min = d
 			}
@@ -88,7 +88,7 @@ func Test_U_DepthEQ2(t *testing.T) {
 		// 1. Find the min/max distances in this MacroVector
 		min, max := 99., 0.
 		for _, vec := range mv {
-			d := severityDistance(vec, "AC:L/AT:N")
+			d := severityDistanceRaw(vec, "AC:L/AT:N")
 			if d < min {
 				min = d
 			}
@@ -140,7 +140,7 @@ func Test_U_DepthEQ4(t *testing.T) {
 		// 1. Find the min/max distances in this MacroVector
 		min, max := 99., 0.
 		for _, vec := range mv {
-			d := severityDistance(vec, "SC:H/SI:S/SA:S")
+			d := severityDistanceRaw(vec, "SC:H/SI:S/SA:S")
 			if d < min {
 				min = d
 			}
@@ -184,7 +184,7 @@ func Test_U_DepthEQ5(t *testing.T) {
 		// 1. Find the min/max distances in this MacroVector
 		min, max := 99., 0.
 		for _, vec := range mv {
-			d := severityDistance(vec, "E:A")
+			d := severityDistanceRaw(vec, "E:A")
 			if d < min {
 				min = d
 			}
@@ -255,7 +255,7 @@ func Test_U_DepthEQ3EQ6(t *testing.T) {
 			// 1. Find the min/max distances in this MacroVector
 			min, max := 99., 0.
 			for _, vec := range mv {
-				d := severityDistance(vec, "VC:H/VI:H/VA:H/CR:H/IR:H/AR:H")
+				d := severityDistanceRaw(vec, "VC:H/VI:H/VA:H/CR:H/IR:H/AR:H")
 				if d < min {
 					min = d
 				}

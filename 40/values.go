@@ -48,6 +48,9 @@ const (
 	vscia_h uint8 = iota
 	vscia_l
 	vscia_n
+	// vscia_s is only used during severity distances computation, it
+	// is not a valid value for SI/SA and not even a valid value for MSC.
+	vscia_s
 )
 
 // Threat
@@ -164,4 +167,24 @@ const (
 	u_green
 	u_amber
 	u_red
+)
+
+// The following values are used to dance in memory :)
+
+const (
+	av uint8 = iota
+	ac
+	at
+	pr
+	ui
+	vc
+	vi
+	va
+	sc
+	si
+	sa
+	e
+	cr
+	ir
+	ar
 )

@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	sevIdx = map[uint8][]uint8{
+	sevIdx = [][]uint8{
 		// Base metrics
 		av: {av_n, av_a, av_l, av_p},
 		ac: {ac_l, ac_h},

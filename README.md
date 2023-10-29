@@ -210,7 +210,7 @@ BenchmarkParseVector_BTES-12                  931626            1124 ns/op      
 BenchmarkCVSS40Vector-12                     2162690           604.2 ns/op       192 B/op          1 allocs/op
 BenchmarkCVSS40Get-12                      219190380           5.748 ns/op         0 B/op          0 allocs/op
 BenchmarkCVSS40Set-12                      114939408           10.67 ns/op         0 B/op          0 allocs/op
-BenchmarkCVSS40Score-12                      1132005            1286 ns/op         0 B/op          0 allocs/op
+BenchmarkCVSS40Score-12                      1505569           844.2 ns/op         0 B/op          0 allocs/op
 ```
 
 ### How it works

@@ -8,6 +8,7 @@ import (
 	goark3 "github.com/goark/go-cvss/v3/metric"
 	gocvss30 "github.com/pandatix/go-cvss/30"
 	gocvss31 "github.com/pandatix/go-cvss/31"
+	claircore "github.com/quay/claircore/toolkit/types/cvss"
 )
 
 func v3corpus(f *testing.F) {
@@ -93,6 +94,31 @@ func FuzzDifferential_V3_Facebookincubator(f *testing.F) {
 		bs2, ts2, es2 := vec2.BaseScore(), vec2.TemporalScore(), vec2.EnvironmentalScore()
 		if bs1 != bs2 || ts1 != ts2 || es1 != es2 {
 			t.Fatalf("For vector %s, github.com/pandatix/go-cvss gave scores %.1f;%.1f;%.1f and github.com/facebookincubator/nvdtools %.1f;%.1f;%.1f", raw, bs1, ts1, es1, bs2, ts2, es2)
+		}
+	})
+}
+
+func FuzzDifferential_V3_Claircore(f *testing.F) {
+	v3corpus(f)
+
+	f.Fuzz(func(t *testing.T, raw string) {
+		vec1, err1 := gocvss31.ParseVector(raw)
+		vec2, err2 := claircore.ParseV3(raw)
+
+		if (err1 != nil) != (err2 != nil) {
+			t.Fatalf("For vector %s, github.com/pandatix/go-cvss raised error \"%v\" and github.com/quay/claircore/toolkit \"%v\"", raw, err1, err2)
+		}
+		if err1 != nil || err2 != nil {
+			return
+		}
+
+		// Does not compare strict same output as CVSS v3 is laxist
+
+		// quay/claircore is limited to environmental metrics first, which is not desirable
+		es1 := vec1.EnvironmentalScore()
+		es2 := vec2.Score()
+		if es1 != es2 {
+			t.Fatalf("For vector %s, github.com/pandatix/go-cvss gave environmental score %.1f and github.com/quay/claircore/toolkit %.1f", raw, es1, es2)
 		}
 	})
 }

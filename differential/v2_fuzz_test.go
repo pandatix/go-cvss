@@ -7,6 +7,7 @@ import (
 	facebook2 "github.com/facebookincubator/nvdtools/cvss2"
 	goark2 "github.com/goark/go-cvss/v2/metric"
 	gocvss20 "github.com/pandatix/go-cvss/20"
+	claircore "github.com/quay/claircore/toolkit/types/cvss"
 	umisama "github.com/umisama/go-cvss"
 	zntrio "github.com/zntrio/mitre/cvss/v2/vector"
 )
@@ -159,6 +160,35 @@ func FuzzDifferential_V2_Umisama(f *testing.F) {
 		bs2, ts2, es2 := vec2.BaseScore(), vec2.TemporalScore(), vec2.EnvironmentalScore()
 		if bs1 != bs2 || ts1 != ts2 || es1 != es2 {
 			t.Fatalf("For vector %s, github.com/pandatix/go-cvss gave scores %.1f;%.1f;%.1f and github.com/umisama/go-cvss %.1f;%.1f;%.1f", raw, bs1, ts1, es1, bs2, ts2, es2)
+		}
+	})
+}
+
+func FuzzDifferential_V2_Claircore(f *testing.F) {
+	v2corpus(f)
+
+	f.Fuzz(func(t *testing.T, raw string) {
+		vec1, err1 := gocvss20.ParseVector(raw)
+		vec2, err2 := claircore.ParseV2(raw)
+
+		if (err1 != nil) != (err2 != nil) {
+			t.Fatalf("For vector %s, github.com/pandatix/go-cvss raised error \"%v\" and github.com/quay/claircore/toolkit \"%v\"", raw, err1, err2)
+		}
+		if err1 != nil || err2 != nil {
+			return
+		}
+
+		outVec1 := vec1.Vector()
+		outVec2 := vec2.String()
+		if outVec1 != outVec2 {
+			t.Fatalf("For vector %s, github.com/pandatix/go-cvss vectorized %s and github.com/quay/claircore/toolkit %s", raw, outVec1, outVec2)
+		}
+
+		// quay/claircore is limited to environmental metrics first, which is not desirable
+		es1 := vec1.EnvironmentalScore()
+		es2 := vec2.Score()
+		if es1 != es2 {
+			t.Fatalf("For vector %s, github.com/pandatix/go-cvss gave environmental score %.1f and github.com/quay/claircore/toolkit %.1f", raw, es1, es2)
 		}
 	})
 }

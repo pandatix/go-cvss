@@ -288,9 +288,12 @@ Bug trophy list:
  - [`go.zenithar.org/mitre` #1](https://github.com/zntrio/mitre/issues/1) Improper Input Validation in CVSS v2 parsing
  - [`github.com/bunji2/cvssv3` #2](https://github.com/bunji2/cvssv3/issues/2) Invalid CVSS v3 score computation
  - [`github.com/bunji2/cvssv3` #3](https://github.com/bunji2/cvssv3/issues/3) Improper Input Validation in CVSS v3 parsing
+ - [`github.com/quay/claircore` #1230](https://github.com/quay/claircore/issues/1230) CVSS: panic and invalid vector validation
+ - [`github.com/quay/claircore` #1232](https://github.com/quay/claircore/pull/1232) cvss: bug fixes
 
 Vulnerability trophy list:
  - [`github.com/facebookincubator/nvdtools` #201](https://github.com/facebookincubator/nvdtools/pull/201) Fix crash on malformed input in ParseCVSSVector
+ - [`github.com/quay/claircore` #1230](https://github.com/quay/claircore/issues/1230) CVSS: panic and invalid vector validation
 
 ---
 

@@ -1,6 +1,6 @@
 module github.com/pandatix/go-cvss/differential
 
-go 1.22
+go 1.22.0
 
 replace github.com/pandatix/go-cvss => ../
 

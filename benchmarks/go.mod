@@ -1,6 +1,6 @@
 module github.com/pandatix/go-cvss/benchmarks
 
-go 1.22
+go 1.22.0
 
 replace github.com/pandatix/go-cvss => ../
 
@@ -17,5 +17,6 @@ require (
 
 require (
 	github.com/goark/errs v1.2.2 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 )

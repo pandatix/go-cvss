@@ -47,7 +47,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
+          checksum_file="$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')"
           echo "hashes=$(cat $checksum_file | base64 -w0)" >> "$GITHUB_OUTPUT"
 
   provenance:
@@ -83,9 +83,9 @@ jobs:
           PROVENANCE: "${{ needs.provenance.outputs.provenance-name }}"
         run: |
           set -euo pipefail
-          checksums=$(echo "$CHECKSUMS" | base64 -d)
+          checksums="$(echo "$CHECKSUMS" | base64 -d)"
           while read -r line; do
-              fn=$(echo $line | cut -d ' ' -f2)
+              fn="$(echo $line | cut -d ' ' -f2)"
               echo "Verifying $fn"
               slsa-verifier verify-artifact --provenance-path "$PROVENANCE" \
                                             --source-uri "github.com/$GITHUB_REPOSITORY" \

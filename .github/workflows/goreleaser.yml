@@ -28,7 +28,7 @@ jobs:
           check-latest: true
 
       - name: Install Syft
-        uses: anchore/sbom-action/download-syft@251a468eed47e5082b105c3ba6ee500c0e65a764 # v0.17.6
+        uses: anchore/sbom-action/download-syft@fc46e51fd3cb168ffb36c6d1915723c47db58abb # v0.17.7
 
       - name: Run GoReleaser
         id: run-goreleaser

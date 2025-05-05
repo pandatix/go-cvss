@@ -1,0 +1,12 @@
+version: "2"
+
+linters:
+  exclusions:
+    rules:
+      # Don't apply De Morgan's law and switch statements to stick with the standards pseudo-code
+      - linters:
+          - staticcheck
+        text: "QF1001:"
+      - linters:
+          - staticcheck
+        text: "QF1003:"

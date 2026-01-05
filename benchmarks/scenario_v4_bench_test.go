@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	pandatix40 "github.com/pandatix/go-cvss/40"
+	claircore "github.com/quay/claircore/toolkit/types/cvss"
 )
 
 const (
@@ -26,6 +27,18 @@ func Benchmark_V4_ParseVector(b *testing.B) {
 			Gerr = err
 		})
 	})
+	b.Run("quay/claircore", func(pb *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			var vec claircore.V4
+			var err error
+			for pb.Next() {
+				vec, err = claircore.ParseV4(cvss40vector)
+			}
+			GclaircoreVec4 = vec
+			Gerr = err
+		})
+	})
 }
 
 // This benchmarks the vectorizing function on a CVSS v4.0 vector.
@@ -39,6 +52,17 @@ func Benchmark_V4_Vector(b *testing.B) {
 			var str string
 			for pb.Next() {
 				str = vec.Vector()
+			}
+			Gstr = str
+		})
+	})
+	b.Run("quay/claircore", func(b *testing.B) {
+		vec, _ := claircore.ParseV4(cvss40vector)
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			var str string
+			for pb.Next() {
+				str = vec.String()
 			}
 			Gstr = str
 		})
@@ -59,8 +83,10 @@ func Benchmark_V4_BaseScore(b *testing.B) {
 			Gf = f
 		})
 	})
+	// quay/claircore can't handle base score computing ONLY
 }
 
 var (
-	GpandatixVec4 *pandatix40.CVSS40
+	GpandatixVec4  *pandatix40.CVSS40
+	GclaircoreVec4 claircore.V4
 )

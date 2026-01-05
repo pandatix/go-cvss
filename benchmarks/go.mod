@@ -10,6 +10,8 @@ require (
 	github.com/facebookincubator/nvdtools v0.1.5
 	github.com/goark/go-cvss v1.6.7
 	github.com/pandatix/go-cvss v0.5.2
+	github.com/quay/claircore/toolkit v1.3.0
+	github.com/scagogogo/cvss-parser v0.0.0-20250717011716-41efc8551f0f
 	github.com/slimsec/cvss v0.0.0-20150707152743-289f023e1db1
 	github.com/umisama/go-cvss v0.0.0-20150430082624-a4ad666ead9b
 	github.com/zntrio/mitre v1.0.1
@@ -17,6 +19,5 @@ require (
 
 require (
 	github.com/goark/errs v1.3.2 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 )

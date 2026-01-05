@@ -7,6 +7,7 @@ import (
 	facebook2 "github.com/facebookincubator/nvdtools/cvss2"
 	goark2 "github.com/goark/go-cvss/v2/metric"
 	pandatix20 "github.com/pandatix/go-cvss/20"
+	claircore "github.com/quay/claircore/toolkit/types/cvss"
 	slimsec "github.com/slimsec/cvss"
 	umisama "github.com/umisama/go-cvss"
 	zntrioVec2 "github.com/zntrio/mitre/api/mitre/cvss/v2"
@@ -94,6 +95,18 @@ func Benchmark_V2_ParseVector(b *testing.B) {
 			Gerr = err
 		})
 	})
+	b.Run("quay/claircore", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			var vec claircore.V2
+			var err error
+			for pb.Next() {
+				vec, err = claircore.ParseV2(cvss20vector)
+			}
+			GclaircoreVec2 = vec
+			Gerr = err
+		})
+	})
 }
 
 // This benchmarks the vectorizing function on a CVSS v2.0 vector.
@@ -164,6 +177,17 @@ func Benchmark_V2_Vector(b *testing.B) {
 			Gstr = str
 		})
 	})
+	b.Run("quay/claircore", func(b *testing.B) {
+		vec, _ := claircore.ParseV2(cvss20vector)
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			var str string
+			for pb.Next() {
+				str = vec.String()
+			}
+			Gstr = str
+		})
+	})
 }
 
 // This benchmarks the base score computing on a CVSS v2.0 vector.
@@ -230,13 +254,15 @@ func Benchmark_V2_BaseScore(b *testing.B) {
 	})
 	// zntrio/mitre can't handle base score computing ONLY
 	// attwad/gocvss can't handle base score computing ONLY
+	// quay/claircore can't handle base score computing ONLY
 }
 
 var (
-	GpandatixVec2 *pandatix20.CVSS20
-	GgoarkVec2    *goark2.Environmental
-	GumisamaVec2  umisama.Vectors
-	GfacebookVec2 facebook2.Vector
-	Gzntrio2Vec   *zntrioVec2.Vector
-	GattwadVec    attwad.CVSS
+	GpandatixVec2  *pandatix20.CVSS20
+	GgoarkVec2     *goark2.Environmental
+	GumisamaVec2   umisama.Vectors
+	GfacebookVec2  facebook2.Vector
+	Gzntrio2Vec    *zntrioVec2.Vector
+	GattwadVec     attwad.CVSS
+	GclaircoreVec2 claircore.V2
 )

@@ -290,6 +290,7 @@ Bug trophy list:
  - [`github.com/bunji2/cvssv3` #3](https://github.com/bunji2/cvssv3/issues/3) Improper Input Validation in CVSS v3 parsing
  - [`github.com/quay/claircore` #1230](https://github.com/quay/claircore/issues/1230) CVSS: panic and invalid vector validation
  - [`github.com/quay/claircore` #1232](https://github.com/quay/claircore/pull/1232) cvss: bug fixes
+ - [`github.com/scagogogo/cvss` #1](https://github.com/scagogogo/cvss/issues/1) Improper Input Validation in CVSS v3.1 parsing
 
 Vulnerability trophy list:
  - [`github.com/facebookincubator/nvdtools` #201](https://github.com/facebookincubator/nvdtools/pull/201) Fix crash on malformed input in ParseCVSSVector

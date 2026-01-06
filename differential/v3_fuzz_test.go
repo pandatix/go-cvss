@@ -9,6 +9,8 @@ import (
 	gocvss30 "github.com/pandatix/go-cvss/30"
 	gocvss31 "github.com/pandatix/go-cvss/31"
 	claircore "github.com/quay/claircore/toolkit/types/cvss"
+	"github.com/scagogogo/cvss-parser/pkg/cvss"
+	scagogogoparser "github.com/scagogogo/cvss-parser/pkg/parser"
 )
 
 func v3corpus(f *testing.F) {
@@ -119,6 +121,34 @@ func FuzzDifferential_V3_Claircore(f *testing.F) {
 		es2 := vec2.Score()
 		if es1 != es2 {
 			t.Fatalf("For vector %s, github.com/pandatix/go-cvss gave environmental score %.1f and github.com/quay/claircore/toolkit %.1f", raw, es1, es2)
+		}
+	})
+}
+
+func FuzzDifferential_V3_Scagogogo(f *testing.F) {
+	v3corpus(f)
+
+	f.Fuzz(func(t *testing.T, raw string) {
+		vec1, err1 := gocvss31.ParseVector(raw)
+		vec2, err2 := scagogogoparser.NewCvss3xParser(raw).Parse()
+
+		if (err1 != nil) != (err2 != nil) {
+			t.Fatalf("For vector %s, github.com/pandatix/go-cvss raised error \"%v\" and github.com/scagogogo/cvss/pkg/parser \"%v\"", raw, err1, err2)
+		}
+		if err1 != nil || err2 != nil {
+			return
+		}
+
+		// Does not compare strict same output as CVSS v3 is laxist
+
+		// scagogogo/cvss does not directly expose base/temporal/environmental scores
+		es1 := vec1.EnvironmentalScore()
+		es2, err := cvss.NewCalculator(vec2).Calculate()
+		if err != nil {
+			t.Fatalf("For vector %s, github.com/scagogogo/cvss/pkg/cvss raised error \"%v\" when none were expected.", raw, err)
+		}
+		if es1 != es2 {
+			t.Fatalf("For vector %s, github.com/pandatix/go-cvss gave environmental score %.1f and github.com/scagogogo/cvss/pkg/parser %.1f", raw, es1, es2)
 		}
 	})
 }

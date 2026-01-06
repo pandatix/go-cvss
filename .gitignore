@@ -4,3 +4,5 @@
 *.pprof
 
 */testdata/*
+
+benchmarks/dist/*

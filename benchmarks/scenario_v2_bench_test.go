@@ -19,7 +19,7 @@ const (
 )
 
 func Benchmark_V2_ParseVector(b *testing.B) {
-	b.Run("pandatix/go-cvss", func(b *testing.B) {
+	b.Run("github.com/pandatix/go-cvss", func(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			var vec *pandatix20.CVSS20
@@ -31,7 +31,7 @@ func Benchmark_V2_ParseVector(b *testing.B) {
 			Gerr = err
 		})
 	})
-	b.Run("umisama/go-cvss", func(b *testing.B) {
+	b.Run("github.com/umisama/go-cvss", func(b *testing.B) {
 		// workaround as not compliant with the specification
 		cvss20vector := "(" + cvss20vector + ")"
 		b.ResetTimer()
@@ -45,8 +45,8 @@ func Benchmark_V2_ParseVector(b *testing.B) {
 			Gerr = err
 		})
 	})
-	// bunji2/cvssv3 can't handle CVSS v2
-	b.Run("goark/go-cvss", func(b *testing.B) {
+	// github.com/bunji2/cvssv3 can't handle CVSS v2
+	b.Run("github.com/goark/go-cvss", func(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			var vec = goark2.NewEnvironmental()
@@ -58,7 +58,7 @@ func Benchmark_V2_ParseVector(b *testing.B) {
 			Gerr = err
 		})
 	})
-	b.Run("facebookincubator/nvdtools", func(b *testing.B) {
+	b.Run("github.com/facebookincubator/nvdtools", func(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			var vec facebook2.Vector
@@ -70,8 +70,8 @@ func Benchmark_V2_ParseVector(b *testing.B) {
 			Gerr = err
 		})
 	})
-	// slimsec/cvss can't handle CVSS v2 parsing
-	b.Run("zntrio/mitre", func(b *testing.B) {
+	// github.com/slimsec/cvss can't handle CVSS v2 parsing
+	b.Run("github.com/zntrio/mitre", func(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			var vec *zntrioVec2.Vector
@@ -83,7 +83,7 @@ func Benchmark_V2_ParseVector(b *testing.B) {
 			Gerr = err
 		})
 	})
-	b.Run("attwad/gocvss", func(b *testing.B) {
+	b.Run("github.com/attwad/gocvss", func(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			var vec attwad.CVSS
@@ -95,7 +95,7 @@ func Benchmark_V2_ParseVector(b *testing.B) {
 			Gerr = err
 		})
 	})
-	b.Run("quay/claircore", func(b *testing.B) {
+	b.Run("github.com/quay/claircore", func(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			var vec claircore.V2
@@ -113,7 +113,7 @@ func Benchmark_V2_ParseVector(b *testing.B) {
 // The returned vector contains only Base metrics as it is the most
 // common case in the NVD.
 func Benchmark_V2_Vector(b *testing.B) {
-	b.Run("pandatix/go-cvss", func(b *testing.B) {
+	b.Run("github.com/pandatix/go-cvss", func(b *testing.B) {
 		vec, _ := pandatix20.ParseVector(cvss20vector)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -124,7 +124,7 @@ func Benchmark_V2_Vector(b *testing.B) {
 			Gstr = str
 		})
 	})
-	b.Run("umisama/go-cvss", func(b *testing.B) {
+	b.Run("github.com/umisama/go-cvss", func(b *testing.B) {
 		// workaround as not compliant with the specification
 		// Really performant (1 alloc/op) as all lies in the heap so it
 		// does not escape until return statement (all lenghts are known)
@@ -139,9 +139,9 @@ func Benchmark_V2_Vector(b *testing.B) {
 			Gstr = str
 		})
 	})
-	// bunji2/cvssv3 can't handle CVSS v2
-	// goark/go-cvss can't handle CVSS v2 vectorizing
-	b.Run("facebookincubator/nvdtools", func(b *testing.B) {
+	// github.com/bunji2/cvssv3 can't handle CVSS v2
+	// github.com/goark/go-cvss can't handle CVSS v2 vectorizing
+	b.Run("github.com/facebookincubator/nvdtools", func(b *testing.B) {
 		vec, _ := facebook2.VectorFromString(cvss20vector)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -152,8 +152,8 @@ func Benchmark_V2_Vector(b *testing.B) {
 			Gstr = str
 		})
 	})
-	// slimsec/cvss can't handle CVSS v2 vectorizing
-	b.Run("zntrio/mitre", func(b *testing.B) {
+	// github.com/slimsec/cvss can't handle CVSS v2 vectorizing
+	b.Run("github.com/zntrio/mitre", func(b *testing.B) {
 		vec, _ := zntrio2.FromString(cvss20vector)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -166,7 +166,7 @@ func Benchmark_V2_Vector(b *testing.B) {
 			Gerr = err
 		})
 	})
-	b.Run("attwad/gocvss", func(b *testing.B) {
+	b.Run("github.com/attwad/gocvss", func(b *testing.B) {
 		vec, _ := attwad.Parse(cvss20vector)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -177,7 +177,7 @@ func Benchmark_V2_Vector(b *testing.B) {
 			Gstr = str
 		})
 	})
-	b.Run("quay/claircore", func(b *testing.B) {
+	b.Run("github.com/quay/claircore", func(b *testing.B) {
 		vec, _ := claircore.ParseV2(cvss20vector)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -193,7 +193,7 @@ func Benchmark_V2_Vector(b *testing.B) {
 // This benchmarks the base score computing on a CVSS v2.0 vector.
 // Only the base score is computed
 func Benchmark_V2_BaseScore(b *testing.B) {
-	b.Run("pandatix/go-cvss", func(b *testing.B) {
+	b.Run("github.com/pandatix/go-cvss", func(b *testing.B) {
 		vec, _ := pandatix20.ParseVector(cvss20vector)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -204,7 +204,7 @@ func Benchmark_V2_BaseScore(b *testing.B) {
 			Gf = f
 		})
 	})
-	b.Run("umisama/go-cvss", func(b *testing.B) {
+	b.Run("github.com/umisama/go-cvss", func(b *testing.B) {
 		// workaround as not compliant with the specification
 		cvss20vector := "(" + cvss20vector + ")"
 		vec, _ := umisama.ParseVectors(cvss20vector)
@@ -217,8 +217,8 @@ func Benchmark_V2_BaseScore(b *testing.B) {
 			Gf = f
 		})
 	})
-	// bunji2/cvssv3 can't handle CVSS v2
-	b.Run("goark/go-cvss", func(b *testing.B) {
+	// github.com/bunji2/cvssv3 can't handle CVSS v2
+	b.Run("github.com/goark/go-cvss", func(b *testing.B) {
 		vec, _ := goark2.NewEnvironmental().Decode(cvss20vector)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -229,7 +229,7 @@ func Benchmark_V2_BaseScore(b *testing.B) {
 			Gf = f
 		})
 	})
-	b.Run("facebookincubator/nvdtools", func(b *testing.B) {
+	b.Run("github.com/facebookincubator/nvdtools", func(b *testing.B) {
 		vec, _ := facebook2.VectorFromString(cvss20vector)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -240,7 +240,7 @@ func Benchmark_V2_BaseScore(b *testing.B) {
 			Gf = f
 		})
 	})
-	b.Run("slimsec/cvss", func(b *testing.B) {
+	b.Run("github.com/slimsec/cvss", func(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			var f float64
@@ -252,9 +252,9 @@ func Benchmark_V2_BaseScore(b *testing.B) {
 			Gerr = err
 		})
 	})
-	// zntrio/mitre can't handle base score computing ONLY
-	// attwad/gocvss can't handle base score computing ONLY
-	// quay/claircore can't handle base score computing ONLY
+	// github.com/zntrio/mitre can't handle base score computing ONLY
+	// github.com/attwad/gocvss can't handle base score computing ONLY
+	// github.com/quay/claircore can't handle base score computing ONLY
 }
 
 var (

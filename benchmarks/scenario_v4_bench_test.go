@@ -15,7 +15,7 @@ const (
 // The vector contains only Base metrics as it is the most common
 // case in the NVD.
 func Benchmark_V4_ParseVector(b *testing.B) {
-	b.Run("pandatix/go-cvss", func(b *testing.B) {
+	b.Run("github.com/pandatix/go-cvss", func(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			var vec *pandatix40.CVSS40
@@ -27,7 +27,7 @@ func Benchmark_V4_ParseVector(b *testing.B) {
 			Gerr = err
 		})
 	})
-	b.Run("quay/claircore", func(pb *testing.B) {
+	b.Run("github.com/quay/claircore", func(pb *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			var vec claircore.V4
@@ -45,7 +45,7 @@ func Benchmark_V4_ParseVector(b *testing.B) {
 // The returned vector contains only Base metrics as it is the most
 // common case in the NVD.
 func Benchmark_V4_Vector(b *testing.B) {
-	b.Run("pandatix/go-cvss", func(b *testing.B) {
+	b.Run("github.com/pandatix/go-cvss", func(b *testing.B) {
 		vec, _ := pandatix40.ParseVector(cvss40vector)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -56,7 +56,7 @@ func Benchmark_V4_Vector(b *testing.B) {
 			Gstr = str
 		})
 	})
-	b.Run("quay/claircore", func(b *testing.B) {
+	b.Run("github.com/quay/claircore", func(b *testing.B) {
 		vec, _ := claircore.ParseV4(cvss40vector)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -72,7 +72,7 @@ func Benchmark_V4_Vector(b *testing.B) {
 // This benchmarks the score computing on a CVSS v4.0 vector.
 // Only the base score is computed.
 func Benchmark_V4_BaseScore(b *testing.B) {
-	b.Run("pandatix/go-cvss", func(b *testing.B) {
+	b.Run("github.com/pandatix/go-cvss", func(b *testing.B) {
 		vec, _ := pandatix40.ParseVector(cvss40vector)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -83,7 +83,7 @@ func Benchmark_V4_BaseScore(b *testing.B) {
 			Gf = f
 		})
 	})
-	// quay/claircore can't handle base score computing ONLY
+	// github.com/quay/claircore can't handle base score computing ONLY
 }
 
 var (

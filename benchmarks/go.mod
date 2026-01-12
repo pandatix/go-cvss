@@ -1,6 +1,6 @@
 module github.com/pandatix/go-cvss/benchmarks
 
-go 1.23.0
+go 1.24.0
 
 replace github.com/pandatix/go-cvss => ../
 
@@ -15,7 +15,7 @@ require (
 	github.com/slimsec/cvss v0.0.0-20150707152743-289f023e1db1
 	github.com/umisama/go-cvss v0.0.0-20150430082624-a4ad666ead9b
 	github.com/zntrio/mitre v1.0.1
-	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d
+	golang.org/x/tools v0.41.0
 	gonum.org/v1/plot v0.16.0
 )
 

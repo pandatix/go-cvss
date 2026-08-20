@@ -131,6 +131,30 @@ func TestScore(t *testing.T) {
 			ExpectedScore:        5.8,
 			ExpectedNomenclature: "CVSS-BE",
 		},
+		// The following test cases comes from issue #292.
+		// They cover discrepancies in scoring between the official calulator and go-cvss,
+		// enabled detecting that the bypass was conducted on Base metrics only, while Modified
+		// alternatives could lead to all (M)VC/(M)VI/(M)VA/(M)SC/(M)SI/(M)SA to None (or X).
+		"issue-292-case-1": {
+			CVSS40:               mustParse("CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:N/SC:N/SI:N/SA:N/E:P/CR:X/IR:M/AR:X/MAV:N/MAC:H/MAT:X/MPR:L/MUI:X/MVC:L/MVI:N/MVA:H/MSC:L/MSI:S/MSA:S"),
+			ExpectedScore:        7.4,
+			ExpectedNomenclature: "CVSS-BTE",
+		},
+		"issue-292-case-2": {
+			CVSS40:               mustParse("CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:N/SC:N/SI:N/SA:N/E:X/CR:H/IR:M/AR:L/MAV:P/MAC:H/MAT:X/MPR:N/MUI:P/MVC:N/MVI:H/MVA:N/MSC:N/MSI:X/MSA:S/S:P/AU:X/R:A/V:X/RE:M/U:Amber"),
+			ExpectedScore:        5.4,
+			ExpectedNomenclature: "CVSS-BE",
+		},
+		"issue-292-case-3": {
+			CVSS40:               mustParse("CVSS:4.0/AV:L/AC:L/AT:N/PR:H/UI:P/VC:H/VI:N/VA:L/SC:H/SI:N/SA:L/E:X/CR:M/IR:H/AR:H/MAV:N/MAC:X/MAT:N/MPR:N/MUI:A/MVC:N/MVI:X/MVA:N/MSC:N/MSI:X/MSA:N"),
+			ExpectedScore:        0.0,
+			ExpectedNomenclature: "CVSS-BE",
+		},
+		"issue-292-case-4": {
+			CVSS40:               mustParse("CVSS:4.0/AV:A/AC:L/AT:P/PR:L/UI:N/VC:N/VI:H/VA:L/SC:N/SI:N/SA:L/E:P/CR:X/IR:L/AR:M/MAV:X/MAC:X/MAT:N/MPR:L/MUI:X/MVC:X/MVI:N/MVA:N/MSC:X/MSI:N/MSA:N/S:P/AU:X/R:A/V:X/RE:M/U:Clear"),
+			ExpectedScore:        0.0,
+			ExpectedNomenclature: "CVSS-BTE",
+		},
 	}
 
 	for testname, tt := range tests {

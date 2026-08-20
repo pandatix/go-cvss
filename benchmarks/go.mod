@@ -15,7 +15,7 @@ require (
 	github.com/slimsec/cvss v0.0.0-20150707152743-289f023e1db1
 	github.com/umisama/go-cvss v0.0.0-20150430082624-a4ad666ead9b
 	github.com/zntrio/mitre v1.0.1
-	golang.org/x/tools v0.48.0
+	golang.org/x/tools v0.49.0
 	gonum.org/v1/plot v0.17.0
 )
 

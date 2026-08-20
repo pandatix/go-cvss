@@ -889,24 +889,27 @@ func (cvss40 CVSS40) get(abv string) string {
 // Score returns the CVSS v4.0's score.
 // Use Nomenclature for getting groups used by computation.
 func (cvss40 *CVSS40) Score() float64 {
-	// If the vulnerability does not affect the system AND the subsequent
-	// system, there is no reason to try scoring what has no risk and impact.
-	if cvss40.u1 == 0b10101010 && (cvss40.u2&0b11110000) == 0b10100000 {
-		return 0.0
-	}
-
-	// Get metrics
-	avVal := mod((cvss40.u0&0b11000000)>>6, (cvss40.u3&0b00001110)>>1)
-	acVal := mod((cvss40.u0&0b00100000)>>5, ((cvss40.u3&0b00000001)<<1)|((cvss40.u4&0b10000000)>>7))
-	atVal := mod((cvss40.u0&0b00010000)>>4, (cvss40.u4&0b01100000)>>5)
-	prVal := mod((cvss40.u0&0b00001100)>>2, (cvss40.u4&0b00011000)>>3)
-	uiVal := mod(cvss40.u0&0b00000011, (cvss40.u4&0b00000110)>>1)
+	// Get shortcutable metrics
 	vcVal := mod((cvss40.u1&0b11000000)>>6, ((cvss40.u4&0b00000001)<<1)|((cvss40.u5&0b10000000)>>7))
 	scVal := mod((cvss40.u1&0b00110000)>>4, (cvss40.u5&0b00000110)>>1)
 	viVal := mod((cvss40.u1&0b00001100)>>2, (cvss40.u5&0b01100000)>>5)
 	siVal := mod(cvss40.u1&0b00000011, ((cvss40.u5&0b00000001)<<2)|((cvss40.u6&0b11000000)>>6))
 	vaVal := mod((cvss40.u2&0b11000000)>>6, (cvss40.u5&0b00011000)>>3)
 	saVal := mod((cvss40.u2&0b00110000)>>4, (cvss40.u6&0b00111000)>>3)
+
+	// If the vulnerability does not affect the system AND the subsequent
+	// system, there is no reason to try scoring what has no risk and impact.
+	if vcVal == vscia_n && viVal == vscia_n && vaVal == vscia_n &&
+		scVal == vscia_n && siVal == vscia_n && saVal == vscia_n {
+		return 0.0
+	}
+
+	// Then get all remaining metrics
+	avVal := mod((cvss40.u0&0b11000000)>>6, (cvss40.u3&0b00001110)>>1)
+	acVal := mod((cvss40.u0&0b00100000)>>5, ((cvss40.u3&0b00000001)<<1)|((cvss40.u4&0b10000000)>>7))
+	atVal := mod((cvss40.u0&0b00010000)>>4, (cvss40.u4&0b01100000)>>5)
+	prVal := mod((cvss40.u0&0b00001100)>>2, (cvss40.u4&0b00011000)>>3)
+	uiVal := mod(cvss40.u0&0b00000011, (cvss40.u4&0b00000110)>>1)
 	crVal := cvss40.u2 & 0b00000011
 	if crVal == ciar_x {
 		crVal = ciar_h
